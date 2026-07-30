@@ -1,10 +1,10 @@
 # Friday HIL-SERL Runbook
 
-Operational runbook for the Quest-teleop + RL stack on the friday bimanual
-arms. Written 2026-07-30 after twin (SIL) bring-up; the real-robot transition
-checklist is at the bottom. Companion docs: `docs/friday_setup_plan.md`
-(design), `examples/experiments/friday_reach/TESTING.md` (issue-by-issue
-tests), `examples/experiments/friday_reach/README.md`.
+Operational runbook for the Quest-teleop + RL stack on the **real friday
+robot**. The digital twin is an optional SIL sandbox (§6) — useful for
+rehearsing without hardware, never required. Companion docs:
+`docs/friday_setup_plan.md` (design), `examples/experiments/friday_reach/
+TESTING.md` (issue-by-issue tests), `examples/experiments/friday_reach/README.md`.
 
 ## 1. System map
 
@@ -13,28 +13,25 @@ Quest app (headset, "Remy2", controller mode)
    │  TCP :8000 (adb reverse, PC is the SERVER — start listener first)
    ▼
 QuestReader ─▶ QuestIntervention ─▶ FridayArmEnv x2 ─▶ DualFridayEnv ─▶ RL stack
- (in the teleop/actor process, conda env `hilserl`, NO ROS imports)
+ (teleop/actor process, conda env `hilserl`, NO ROS imports)
    │ HTTP :5000  (/left/... , /right/...)
    ▼
-friday_server.py  (ROS env — rclpy + Flask, ONE file)
-   │ publish  PoseStamped  cmd_topic_{left,right}     (absolute EE target)
-   │ subscribe JointState /hday/friday/joint_state -> URDF FK = EE pose
-   │   (FK mode, --fk_urdf; validated vs twin ee_pose: 0.00 mm / 0.000 deg.
-   │    Fallback: --state_topic_* PoseStamped subs if a robot ever publishes EE)
-   │ subscribe CompressedImage stereo_topic           (head stereo, L|R in one JPEG)
+friday_server.py  (ROS: rclpy + Flask, ONE self-contained script)
+   │ publish  PoseStamped  /hday/friday/impedance_target_{left,right}   (canon)
+   │ subscribe JointState  /hday/friday/joint_state -> URDF FK = EE pose
+   │   (FK mode, --fk_urdf; validated vs twin: 0.00 mm / 0.000 deg.
+   │    Fallback: --state_topic_* PoseStamped subs)
+   │ subscribe CompressedImage /hday/sensor/camera/stereo_head/image/compressed
    ▼
-J^T Cartesian impedance controller (twin: digital_twin_node / real: robot PC)
+J^T Cartesian impedance controller (real driver — or the twin, §6)
 ```
 
-| Process | Where | Env |
+| Process | Where (real robot) | Env |
 |---|---|---|
-| twin (`run-twin -c friday_gen1/alone_v1`) | container (`amazing_cray`, net=host) | container venv |
-| `friday_server.py` | wherever ROS + robot topics live (twin: in container, copy at `src/digital-twin/scripts/`) | distro python |
-| `teleop_test.py` / actor / learner | host | conda `hilserl` (py3.10, jax) |
-| Quest app | headset | — |
-
-Canonical `friday_server.py`: `serl_robot_infra/robot_servers/friday_server.py`.
-After editing it, re-copy to the container mount.
+| `friday_server.py` | ops PC (jazzy on host) — run STRAIGHT from this repo, no container, no copy | distro python + `pip install flask absl-py scipy` |
+| `teleop_test.py` / actor / learner | ops PC or any host reaching :5000 | conda `hilserl` (py3.10, jax) |
+| Quest app | headset, USB to the teleop machine | — |
+| impedance controller | robot side (already deployed) | — |
 
 ## 2. Controls
 
@@ -55,19 +52,130 @@ Re-grip anywhere = no jump (error is zero at the press instant by construction).
 All in `examples/experiments/friday_reach/config.py` unless noted. Shared
 knobs appear ONCE (top of file / `_ArmConfig`) and apply to both arms.
 
-| Knob | Where | Current | Meaning |
+| Knob | Where | Hardware-safe committed value | Meaning |
 |---|---|---|---|
-| `TELEOP_EXAGGERATE_POS/ROT` | config.py top | **1.0 / 1.0** | robot displacement = ratio × hand displacement while gripped |
-| `POSE_LIMIT_DELTA` | config.py top | ±0.15 m / ±0.4 rad (hardware-safe) | workspace box half-width around each arm's RESET_POSE |
-| `ACTION_SCALE` | `_ArmConfig` | (1.0, 0.7854) | policy action space AND teleop speed cap (× hz). Linear-region teleop feel is set by exaggeration, NOT this |
-| `RESET_POSE` | per-arm class | measured on twin | episode-start EE pose — MUST be re-measured per robot/init pose |
-| `MAX_EPISODE_LENGTH` | `_ArmConfig` | 100000 | episodes end only on X press (bring-up); restore ~120 for RL runs |
-| `REALSENSE_CAMERAS` | `LeftArmConfig` | `{}` (twin has no stereo) | restore `{"stereo_left": {}, "stereo_right": {}}` on the real robot |
-| impedance gains | `ros2 param set /digital_twin_node imp_*` (twin) / controller side (real) | twin-stable: kp 100, bp 3, kr 3, br 0.1 | wiped on twin restart — re-set every time |
-| twin init pose | `digital-twin/configs/friday_gen1/alone_v1.yaml` `init_joint_pos` | arms at URDF limit centers | changing it changes RESET_POSE → re-measure |
-| server topics | `friday_server.py` flags | see §4 | remap per deployment |
+| `TELEOP_EXAGGERATE_POS/ROT` | config.py top | 1.0 / 1.0 | robot displacement = ratio × hand displacement while gripped |
+| `POSE_LIMIT_DELTA` | config.py top | ±0.15 m / ±0.4 rad | workspace box half-width around each arm's RESET_POSE; widen deliberately. 0.4 rad also keeps the euler clip box away from its ±π / gimbal pathologies |
+| `ACTION_SCALE` | `_ArmConfig` | ⚠ still twin value (1.0, 0.7854) — pick a policy-sane value (paper: 0.01–0.05 m) before RL | policy action space AND teleop speed cap (× hz). Teleop FEEL is set by exaggeration, not this |
+| `RESET_POSE` | per-arm class | measure on the robot (§4.3) | episode-start EE pose |
+| `MAX_EPISODE_LENGTH` | `_ArmConfig` | 100000 (X-press-only episodes) | restore ~120 for RL runs |
+| `REALSENSE_CAMERAS` | `LeftArmConfig` | restore `{"stereo_left": {}, "stereo_right": {}}` on the robot | head stereo via server `/getimage` |
+| impedance gains | robot driver side | tune from soft upward | NOT owned by this stack |
+| server topics | `friday_server.py` flags | defaults = message_names.h canon | remap only if a deployment diverges |
 
-## 4. Start sequence — twin (SIL)
+## 4. Real robot — pre-flight, then start
+
+### 4.1 Pre-flight checklist (e-stop in reach throughout)
+
+1. `ros2 topic list | grep -E "impedance_target|joint_state|stereo_head"` —
+   canon topics present.
+2. `POSE_LIMIT_DELTA` at ±0.15/±0.4 (committed default). Widen only after
+   tracking is proven.
+3. **⚠ `ACTION_SCALE`** — decide the policy-sane value now (it is the RL
+   action space; teleop does not need it large).
+4. Stereo restored in `LeftArmConfig` + `curl :5000/getimage` shows
+   side-by-side eyes (env splits at width/2).
+5. Quest base-yaw probe at the operator spot: push controller toward the
+   robot → coupling error must point robot-forward. Wrong axis →
+   `QuestReader(base_yaw_deg=...)` (180 = mk3; gen2 measured 90).
+6. Impedance gains: robot side, from soft upward. Reference limiting
+   (clamp target vs current pose) on the controller side is still the plan's
+   missing safety piece — the env's per-step clip + box is the only limiter.
+
+### 4.2 Start the server (ops PC, jazzy host — no container)
+
+```bash
+pip install flask absl-py scipy          # once
+source /opt/ros/jazzy/setup.bash         # setup.zsh in zsh
+python3 serl_robot_infra/robot_servers/friday_server.py \
+    --fk_urdf=<path>/friday_gen1_mk5.urdf
+```
+
+FK chain: `BASE -> waist_1..5 -> {side}_arm_1..7 -> {side}_arm_ee`
+(`--fk_root_link/--fk_ee_link_*` to override — EE link and root frame MUST
+match what the impedance controller anchors and interprets commands in).
+Joint matching is by name; no EE-pose topic is needed on the robot.
+
+Gate: `curl -s -X POST http://127.0.0.1:5000/left/getstate` returns a pose
+(503 = joint_state not arriving; the server also warns if chain joints are
+missing from the msg).
+
+### 4.3 Measure RESET_POSE (robot at its rest/start posture)
+
+```bash
+python3 - <<'EOF'
+import requests, numpy as np
+from scipy.spatial.transform import Rotation
+for side in ("left", "right"):
+    p = requests.post(f"http://127.0.0.1:5000/{side}/getstate").json()["pose"]
+    e = Rotation.from_quat(p[3:]).as_euler("xyz")
+    print(f"{side}: RESET_POSE = np.array([{p[0]:.3f}, {p[1]:.3f}, {p[2]:.3f}, {e[0]:.3f}, {e[1]:.3f}, {e[2]:.3f}])")
+EOF
+# -> paste into config.py (twin values do NOT transfer)
+```
+
+Reset-to-where-it-stands = zero motion on the first reset.
+
+### 4.4 Teleop-only session (bring-up gate)
+
+```bash
+adb reverse tcp:8000 tcp:8000
+conda activate hilserl
+cd examples/experiments/friday_reach && python teleop_test.py
+# then start streaming in the Remy2 app: TCP wired, localhost, 8000, controller mode
+```
+
+Pass = all five: zero-policy hold-still → grip = that arm tracks → release =
+freeze mid-motion → re-grip elsewhere = no jump → headset killed mid-grip
+freezes ≤ 0.25 s.
+
+### 4.5 Pipeline (plan §7)
+
+classifier data → classifier → demos → RL:
+
+```bash
+python ../../record_success_fail.py --exp_name friday_reach
+python ../../train_reward_classifier.py --exp_name friday_reach
+python ../../record_demos.py --exp_name friday_reach          # X = episode end
+bash run_learner.sh --demo_path=demo_data/<file>.pkl          # shell 1
+bash run_actor.sh                                             # shell 2
+```
+
+Restore `MAX_EPISODE_LENGTH ≈ 120` for RL. `classifier_ckpt/` must exist in
+the experiment dir for BOTH actor and learner. Buffer sanity check:
+TESTING.md §2.3 (interventions land in RL + demo buffers).
+
+Restart rules: config/wrapper/env edits → restart teleop/actor only (+
+reconnect app). Server edit → restart server.
+
+## 5. Hard-won lessons (mostly learned on the twin, apply everywhere)
+
+- **Shiver = two references fighting.** Seen as: (a) renderer jog + teleop
+  both commanding one arm — never both on an arm at once; (b) gains near the
+  damping ceiling. Amplitude ≈ distance between impedance target and the
+  drive-held reference. First diagnostic for any "two states":
+  `ros2 topic info <topic> --verbose` (publisher count).
+- **Never command measured state.** FridayArmEnv integrates actions on an
+  internal SE(3) command (`cmdpos`), seeded from measurement once at startup.
+  Zero action = identical command every tick.
+- **Soft gains undershoot; the cmdpos integrator + coupling compensate**
+  (error keeps integrating until robot displacement matches hand). Contact
+  force ceiling is `kp × lead` — revisit gains and exaggeration together for
+  contact tasks.
+- **zsh**: `source .../setup.zsh`, not `.bash`.
+- **euler warts** (upstream design, flagged not fixed): `clip_safety_box`
+  clips orientation in euler xyz — misbehaves near yaw ±π and pitch ±π/2.
+  Geodesic cap is the upgrade path if it ever bites.
+
+## 6. OPTION — digital twin (SIL rehearsal, no hardware)
+
+Same stack, twin instead of robot. Only worthwhile for rehearsing procedures
+or debugging the teleop chain; skip when the robot is available.
+
+This test workstation's quirk: host ROS is humble without cyclonedds, so ALL
+ROS (twin, params, server) runs inside the twin container (`amazing_cray`,
+net=host, jazzy); host stays ROS-free. `friday_server.py` runs from the copy
+on the mount (`src/digital-twin/scripts/` — re-copy after edits).
 
 ```bash
 # A [container] twin
@@ -84,118 +192,39 @@ for S in left right; do
   ros2 param set /digital_twin_node imp_kr_$S "[3.0, 3.0, 3.0]"
   ros2 param set /digital_twin_node imp_br_$S "[0.1, 0.1, 0.1]"
 done
-ros2 topic hz /hday/friday/left_ee_pose        # GATE: ~50 Hz
+ros2 topic hz /hday/friday/left_ee_pose        # ~50 Hz gate
 
-# C [container] server (twin cmd topics = impedance_target_*)
-python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py
-# (cmd topics default to the canonical /hday/friday/impedance_target_* from
-#  message_names.h — same names on twin and real robot, no remap)
+# C [container] server (same command as real; twin consumes the same canon topics)
+python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py \
+    --fk_urdf=/workspaces/holiday/descriptions/descriptions/friday/friday_gen1_mk5.urdf
 
-# D [host] gate, then (re-)measure RESET_POSE if the twin init changed
-curl -s -X POST http://127.0.0.1:5000/left/getstate | python3 -m json.tool   # pose, not 503
-python3 - <<'EOF'
-import requests, numpy as np
-from scipy.spatial.transform import Rotation
-for side in ("left", "right"):
-    p = requests.post(f"http://127.0.0.1:5000/{side}/getstate").json()["pose"]
-    e = Rotation.from_quat(p[3:]).as_euler("xyz")
-    print(f"{side}: RESET_POSE = np.array([{p[0]:.3f}, {p[1]:.3f}, {p[2]:.3f}, {e[0]:.3f}, {e[1]:.3f}, {e[2]:.3f}])")
-EOF
-# -> paste into config.py if changed
-
-# E [host, conda hilserl] teleop
-adb reverse tcp:8000 tcp:8000
-cd examples/experiments/friday_reach && python teleop_test.py
-# THEN start/restart streaming in the Remy2 app (TCP wired, localhost, 8000,
-# controller mode) — the listener must exist before the app connects.
+# D [host] measure RESET_POSE for the twin posture (§4.3 snippet), then
+#   conda + adb reverse + teleop_test.py exactly as §4.4
 ```
 
-Restart rules:
-- config.py / wrapper / env edits → restart **teleop_test only** (+ reconnect app)
-- twin restart → re-run B (params), likely re-measure D, restart teleop_test
-- server edit → re-copy to mount, restart C
-
-## 5. Hard-won twin lessons (apply before blaming the teleop stack)
-
-- **Shiver = two references fighting.** Seen twice: (a) renderer jog +
-  teleop both commanding one arm — never run both on an arm at once; (b) gain
-  sets near the damping ceiling (doc'd bp≲30 @240 Hz) — 800/30 shivered,
-  100/3 stable. Amplitude of the flicker ≈ distance between impedance target
-  and the drive-PD-held q.
-- **Never command measured state.** FridayArmEnv integrates actions on an
-  internal SE(3) command (`cmdpos`), seeded from measurement once at startup.
-  Zero action = identical command every tick.
-- **Soft gains undershoot; the cmdpos integrator + coupling compensate**
-  (error keeps integrating until robot displacement matches hand). The force
-  ceiling in contact is `kp × lead` — revisit gains and exaggeration together
-  for contact tasks.
-- **Both processes on one topic**: `ros2 topic info <t> --verbose` is the
-  first diagnostic for any "two states" behavior.
-- **zsh**: `source /opt/ros/<distro>/setup.zsh` (`.bash` breaks under zsh).
-  Host stays ROS-free — all ROS shells live in the container.
-- **euler warts** (upstream design, flagged not fixed): `clip_safety_box`
-  clips orientation in euler xyz — misbehaves near yaw ±π (left arm yaw is
-  0.217 rad from the wrap) and pitch ±π/2. Geodesic cap is the upgrade path.
-
-## 6. REAL ROBOT transition checklist
-
-Do these IN ORDER before first motion. E-stop in reach for every step.
-
-1. **Server flags — FK mode (no EE-pose topic needed on the robot).** The
-   server computes EE pose from `/hday/friday/joint_state` + the URDF; the
-   robot side needs NO new publishers:
-   ```bash
-   python serl_robot_infra/robot_servers/friday_server.py \
-       --fk_urdf=<path>/friday_gen1_mk5.urdf \
-       --stereo_topic=/hday/sensor/camera/stereo_head/image/compressed
-   ```
-   Chain: `BASE -> waist_1..5 -> {side}_arm_1..7 -> {side}_arm_ee`
-   (`--fk_root_link/--fk_ee_link_*` to override; the EE link and root frame
-   MUST match what the impedance controller anchors and interprets commands
-   in). Joint matching is by name from the JointState msg. Alternative:
-   `--state_topic_left/right` if the robot ever publishes EE pose directly.
-
-   **Validate FK against the twin first** (ground truth available): run the
-   FK-mode server against the running twin and diff
-   `curl :5000/left/getstate` pose vs `ros2 topic echo /hday/friday/left_ee_pose`
-   — they must agree to numerical noise. (Twin note: its `ee_pose` is the
-   impedance rcc anchor; with rcc offsets at zero that IS the ee body pose.)
-2. **`POSE_LIMIT_DELTA`** — already at hardware-safe ±0.15 m / ±0.4 rad
-   (done 2026-07-30). Widen deliberately once tracking is proven; 0.4 rad also
-   keeps the euler clip box away from its ±pi / gimbal pathologies.
-3. **⚠ Revisit `ACTION_SCALE`.** (1.0 m, 0.7854 rad) per step means the
-   commanded target can move 1 m per 100 ms tick — fine as an uncapped twin
-   speed, dangerous on hardware, and it is the RL policy's per-step authority.
-   Paper-style values are 0.01–0.05 m. Teleop feel does NOT need it large
-   (exaggeration owns feel); pick the value the POLICY should have.
-4. **Re-measure `RESET_POSE`** on the real robot (step D snippet) — twin
-   values do not transfer.
-5. **Stereo back on**: `LeftArmConfig.REALSENSE_CAMERAS = {"stereo_left": {},
-   "stereo_right": {}}`; verify `curl :5000/getimage` shows side-by-side eyes
-   and the width/2 split is correct.
-6. **Quest base yaw probe** at the real operator spot: push controller toward
-   the robot → the coupling error must point robot-forward. Wrong axis →
-   `QuestReader(base_yaw_deg=...)` (180 = mk3 profile value; gen2 measured 90).
-7. **Impedance gains are the robot side's** — twin-stable values are a sim
-   artifact; tune on hardware from soft upward. Reference limiting on the
-   controller side (clamp target vs current pose) is still the plan's
-   missing safety piece — the env's per-step clip + box is the only limiter.
-8. **teleop-only session first** (`teleop_test.py`): hold-still → grip=track →
-   release=freeze → re-grip no jump → kill headset mid-grip freezes ≤0.25 s.
-9. Then the pipeline in order (TESTING.md §2.3 buffers check, then plan §7):
-   classifier data → classifier → demos (X = episode end, A free for success
-   marking) → `run_learner.sh --demo_path=...` + `run_actor.sh`.
-   Restore `MAX_EPISODE_LENGTH ≈ 120` for RL. Check `classifier_ckpt/` exists
-   in the experiment dir for BOTH actor and learner.
+Twin-only notes:
+- Stable twin gains: kp 100, bp 3, kr 3, br 0.1 (800/30/80/3 shivers). These
+  are a sim artifact — do NOT carry to hardware.
+- Twin has no head stereo (alone_v1) → `REALSENSE_CAMERAS = {}`.
+- For teleop feel on the twin, temporarily widen `POSE_LIMIT_DELTA` /
+  raise exaggeration — restore with `git checkout -- config.py` after.
+- Twin init pose: `digital-twin/configs/friday_gen1/alone_v1.yaml`
+  `init_joint_pos` (arms currently at URDF limit centers). Changing it
+  changes RESET_POSE → re-measure.
+- Renderer (`renderer.py --node digital_twin_node`) and teleop must never
+  command the same arm simultaneously.
+- Twin's own EE feedback topics (`/hday/friday/{left,right}_ee_pose`, 50 Hz)
+  exist and can replace FK mode (`--state_topic_*`) — FK was validated
+  against them at 0.00 mm / 0.000°.
 
 ## 7. File inventory
 
 | File | Role |
 |---|---|
 | `serl_robot_infra/franka_env/quest_reader.py` | Quest TCP server, LH→RH + base alignment, poses/buttons |
-| `serl_robot_infra/franka_env/envs/quest_intervention.py` | grip clutch + coupling, X episode end, SpacemouseIntervention contract |
+| `serl_robot_infra/franka_env/envs/quest_intervention.py` | grip clutch + coupling + exaggeration, X episode end, SpacemouseIntervention contract |
 | `serl_robot_infra/franka_env/envs/friday_arm_env.py` | per-arm 6D env, cmdpos integrator, stereo-over-HTTP, fake_env offline |
-| `serl_robot_infra/robot_servers/friday_server.py` | ROS↔HTTP bridge, per-arm routes, the only ROS process |
+| `serl_robot_infra/robot_servers/friday_server.py` | ROS↔HTTP bridge, FK mode, per-arm routes — the only ROS process |
 | `examples/experiments/friday_reach/config.py` | ALL knobs, arm configs, wrapper chain |
 | `examples/experiments/friday_reach/teleop_test.py` | zero-policy bring-up loop |
 | `examples/experiments/friday_reach/test_quest_math.py` | 8 math self-checks (`python3 test_quest_math.py`) |
