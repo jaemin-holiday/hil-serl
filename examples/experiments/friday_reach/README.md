@@ -18,10 +18,13 @@ routes: `http://127.0.0.1:5000/left/...` and `.../right/...`.
 
 ## Topics (flags on friday_server.py)
 
-- publish `PoseStamped` → `/hday/friday/{left,right}_wrist_pose_command`
+- publish `PoseStamped` → `/hday/friday/impedance_target_{left,right}` (message_names.h canon)
   (absolute EE target for the jacobian-transpose impedance controller)
-- subscribe `PoseStamped` ← `/hday/friday/{left,right}_ee_pose`
-  **placeholder — point at the real EE-pose feedback topic**
+- subscribe `JointState` ← `/hday/friday/joint_state` → **FK mode**
+  (`--fk_urdf=<path>/friday_gen1_mk5.urdf`): EE pose computed server-side,
+  chain `BASE → waist_1..5 → arm_1..7 → arm_ee`, validated vs the twin at
+  0.00 mm / 0.000°. No EE-pose topic needed on the robot. (`--state_topic_*`
+  PoseStamped subs remain as the fallback mode.)
 - subscribe `CompressedImage` ← `/hday/sensor/camera/stereo_head/image/compressed`
   (robot-PC stereo camera; the Quest link carries ONLY controller pose + buttons)
 
@@ -47,7 +50,8 @@ A (right) / X (left) buttons pass through `info["right"]` / `info["left"]`.
 
 ```bash
 # 0. ROS env, robot LAN
-python serl_robot_infra/robot_servers/friday_server.py   # check state topics first!
+python serl_robot_infra/robot_servers/friday_server.py \
+    --fk_urdf=<path>/friday_gen1_mk5.urdf              # cmd topics default to canon
 
 # 1. teleop only — verify clutch, impedance tracking, workspace clamps
 cd examples/experiments/friday_reach && python teleop_test.py
@@ -66,7 +70,9 @@ bash run_actor.sh
 
 ## Before first motion — measure and fill (marked `# MEASURE` in config.py)
 
-- `RESET_POSE`, `ABS_POSE_LIMIT_LOW/HIGH` per arm (BASE frame, xyz + euler xyz)
+- `RESET_POSE` per arm (BASE frame, xyz + scipy euler xyz — use the runbook
+  measurement snippet); the workspace box derives from the shared
+  `POSE_LIMIT_DELTA` (one line, both arms)
 - `IMAGE_CROP` once the scene is framed
 - Quest base yaw: `QuestReader(base_yaw_deg=...)` — 180 is the friday mk3
   value from remy2; verify with an arms-forward probe (push hand forward,

@@ -18,7 +18,9 @@ QuestReader ─▶ QuestIntervention ─▶ FridayArmEnv x2 ─▶ DualFridayEnv
    ▼
 friday_server.py  (ROS env — rclpy + Flask, ONE file)
    │ publish  PoseStamped  cmd_topic_{left,right}     (absolute EE target)
-   │ subscribe PoseStamped state_topic_{left,right}   (EE pose feedback)
+   │ subscribe JointState /hday/friday/joint_state -> URDF FK = EE pose
+   │   (FK mode, --fk_urdf; validated vs twin ee_pose: 0.00 mm / 0.000 deg.
+   │    Fallback: --state_topic_* PoseStamped subs if a robot ever publishes EE)
    │ subscribe CompressedImage stereo_topic           (head stereo, L|R in one JPEG)
    ▼
 J^T Cartesian impedance controller (twin: digital_twin_node / real: robot PC)
@@ -56,7 +58,7 @@ knobs appear ONCE (top of file / `_ArmConfig`) and apply to both arms.
 | Knob | Where | Current | Meaning |
 |---|---|---|---|
 | `TELEOP_EXAGGERATE_POS/ROT` | config.py top | **1.0 / 1.0** | robot displacement = ratio × hand displacement while gripped |
-| `POSE_LIMIT_DELTA` | config.py top | ±2.0 m / ±1.5708 rad | workspace box half-width around each arm's RESET_POSE |
+| `POSE_LIMIT_DELTA` | config.py top | ±0.15 m / ±0.4 rad (hardware-safe) | workspace box half-width around each arm's RESET_POSE |
 | `ACTION_SCALE` | `_ArmConfig` | (1.0, 0.7854) | policy action space AND teleop speed cap (× hz). Linear-region teleop feel is set by exaggeration, NOT this |
 | `RESET_POSE` | per-arm class | measured on twin | episode-start EE pose — MUST be re-measured per robot/init pose |
 | `MAX_EPISODE_LENGTH` | `_ArmConfig` | 100000 | episodes end only on X press (bring-up); restore ~120 for RL runs |
@@ -85,9 +87,9 @@ done
 ros2 topic hz /hday/friday/left_ee_pose        # GATE: ~50 Hz
 
 # C [container] server (twin cmd topics = impedance_target_*)
-python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py \
-    --cmd_topic_left=/hday/friday/impedance_target_left \
-    --cmd_topic_right=/hday/friday/impedance_target_right
+python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py
+# (cmd topics default to the canonical /hday/friday/impedance_target_* from
+#  message_names.h — same names on twin and real robot, no remap)
 
 # D [host] gate, then (re-)measure RESET_POSE if the twin init changed
 curl -s -X POST http://127.0.0.1:5000/left/getstate | python3 -m json.tool   # pose, not 503
@@ -139,21 +141,28 @@ Restart rules:
 
 Do these IN ORDER before first motion. E-stop in reach for every step.
 
-1. **Server flags** — real topics, no remap needed if the robot publishes the
-   defaults:
+1. **Server flags — FK mode (no EE-pose topic needed on the robot).** The
+   server computes EE pose from `/hday/friday/joint_state` + the URDF; the
+   robot side needs NO new publishers:
    ```bash
    python serl_robot_infra/robot_servers/friday_server.py \
-       --cmd_topic_left=/hday/friday/left_wrist_pose_command \
-       --cmd_topic_right=/hday/friday/right_wrist_pose_command \
-       --state_topic_left=<REAL left EE pose topic> \
-       --state_topic_right=<REAL right EE pose topic> \
+       --fk_urdf=<path>/friday_gen1_mk5.urdf \
        --stereo_topic=/hday/sensor/camera/stereo_head/image/compressed
    ```
-   Frame contract: EE state and target in the SAME frame (root/BASE), quat
-   xyzw in PoseStamped fields. Server subscribes sensor-data QoS.
-2. **⚠ Tighten `POSE_LIMIT_DELTA`.** Currently ±2.0 m / ±1.5708 rad — that is
-   NO workspace protection on hardware. Start ±0.15 m / ±0.4 rad and widen
-   deliberately.
+   Chain: `BASE -> waist_1..5 -> {side}_arm_1..7 -> {side}_arm_ee`
+   (`--fk_root_link/--fk_ee_link_*` to override; the EE link and root frame
+   MUST match what the impedance controller anchors and interprets commands
+   in). Joint matching is by name from the JointState msg. Alternative:
+   `--state_topic_left/right` if the robot ever publishes EE pose directly.
+
+   **Validate FK against the twin first** (ground truth available): run the
+   FK-mode server against the running twin and diff
+   `curl :5000/left/getstate` pose vs `ros2 topic echo /hday/friday/left_ee_pose`
+   — they must agree to numerical noise. (Twin note: its `ee_pose` is the
+   impedance rcc anchor; with rcc offsets at zero that IS the ee body pose.)
+2. **`POSE_LIMIT_DELTA`** — already at hardware-safe ±0.15 m / ±0.4 rad
+   (done 2026-07-30). Widen deliberately once tracking is proven; 0.4 rad also
+   keeps the euler clip box away from its ±pi / gimbal pathologies.
 3. **⚠ Revisit `ACTION_SCALE`.** (1.0 m, 0.7854 rad) per step means the
    commanded target can move 1 m per 100 ms tick — fine as an uncapped twin
    speed, dangerous on hardware, and it is the RL policy's per-step authority.

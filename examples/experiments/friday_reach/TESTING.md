@@ -20,12 +20,13 @@ until step 1.5.
 
 ```bash
 # [ROS] confirm the real topic names first
-ros2 topic list | grep -E "wrist_pose_command|ee_pose|stereo_head"
+ros2 topic list | grep -E "impedance_target|joint_state|stereo_head"
 
-# [ROS] start the server — override flags if names differ
+# [ROS] start the server — FK mode (EE pose from joint_state + URDF; no
+# EE-pose topic needed on the robot). Cmd topics default to the canonical
+# /hday/friday/impedance_target_* (message_names.h).
 python serl_robot_infra/robot_servers/friday_server.py \
-    --state_topic_left=/hday/friday/left_ee_pose \
-    --state_topic_right=/hday/friday/right_ee_pose
+    --fk_urdf=<path>/friday_gen1_mk5.urdf
 ```
 
 Expect: two startup lines printing cmd/state topics, Flask on :5000.
@@ -43,9 +44,11 @@ q/dq` are **zero stubs** for now — the issue text lists them; they become real
 when the robot publishes those topics (server-side TODO, one subscription
 each).
 
-**503 `{"error": "no EE pose received yet"}`** = server matched no publisher.
-Check topic name, `ROS_DOMAIN_ID`, and QoS (server subscribes BEST_EFFORT
-sensor-data; a RELIABLE-only publisher also matches).
+**503 `{"error": "no EE pose received yet"}`** = no joint_state arriving (FK
+mode) or no publisher matched (state-topic mode). Check topic name,
+`ROS_DOMAIN_ID`, and QoS (server subscribes BEST_EFFORT sensor-data; a
+RELIABLE-only publisher also matches). FK mode also prints a "joint_state
+missing [...]" warning if the msg lacks chain joints.
 
 ### 1.3 Stereo route + split
 
@@ -80,7 +83,7 @@ build the env with no robot/network (fake_env path).
 
 ```bash
 # [ROS] watch the command topic
-ros2 topic echo /hday/friday/left_wrist_pose_command
+ros2 topic echo /hday/friday/impedance_target_left
 
 # read current pose, add +2 cm z, post it:
 curl -s -X POST http://127.0.0.1:5000/left/getstate | python3 -c "
@@ -224,9 +227,8 @@ ros2 topic hz /hday/friday/left_ee_pose        # expect ~50 Hz
 # reaches :5000 at localhost.
 docker exec -it <twin-container-name> bash
 source /opt/ros/jazzy/setup.bash
-python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py \
-    --cmd_topic_left=/hday/friday/impedance_target_left \
-    --cmd_topic_right=/hday/friday/impedance_target_right
+python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py
+# (cmd topics default to /hday/friday/impedance_target_* — message_names.h canon)
 # (state topics: defaults already match the twin's ee_pose topics)
 
 # shell 4 — [conda] quest connected, then
