@@ -44,7 +44,7 @@ class ImageDisplayer(threading.Thread):
 
 
 class DefaultWrenchEnvConfig:
-    """Default configuration for FrankaEnv. Fill in the values below."""
+    """Default configuration for FridayEnv. Fill in the values below."""
 
     SERVER_URL: str = "http://127.0.0.2:5000/"
     REALSENSE_CAMERAS: Dict = {

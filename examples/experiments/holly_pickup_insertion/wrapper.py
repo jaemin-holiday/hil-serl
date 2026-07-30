@@ -7,11 +7,11 @@ import requests
 import copy
 import gymnasium as gym
 import time
-from franka_env.envs.franka_env import FrankaEnv
+from franka_env.envs.franka_env import FridayEnv
 from pynput import keyboard
 
 
-class HollyEnv(FrankaEnv):
+class HollyEnv(FridayEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # self.should_regrasp = True

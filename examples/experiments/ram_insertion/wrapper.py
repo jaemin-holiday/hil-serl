@@ -6,9 +6,9 @@ import numpy as np
 import requests
 from pynput import keyboard
 
-from franka_env.envs.franka_env import FrankaEnv
+from franka_env.envs.franka_env import FridayEnv
 
-class RAMEnv(FrankaEnv):
+class RAMEnv(FridayEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.should_regrasp = False

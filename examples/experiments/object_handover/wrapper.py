@@ -9,9 +9,9 @@ import gymnasium as gym
 import numpy as np
 import requests
 from scipy.spatial.transform import Rotation as R
-from franka_env.envs.franka_env import FrankaEnv
+from franka_env.envs.franka_env import FridayEnv
 
-class HandOffEnv(FrankaEnv):
+class HandOffEnv(FridayEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.resetpos = np.concatenate([self.config.RESET_POSE[:3], R.from_euler("xyz", self.config.RESET_POSE[3:]).as_quat()])

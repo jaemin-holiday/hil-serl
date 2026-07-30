@@ -29,7 +29,7 @@ class ImageDisplayer(threading.Thread):
             cv2.waitKey(1)
 
 
-class DualFrankaEnv(gym.Env):
+class DualFridayEnv(gym.Env):
     def __init__(
         self,
         env_left,

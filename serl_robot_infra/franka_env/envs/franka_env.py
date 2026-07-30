@@ -43,7 +43,7 @@ class ImageDisplayer(threading.Thread):
 
 
 class DefaultEnvConfig:
-    """Default configuration for FrankaEnv. Fill in the values below."""
+    """Default configuration for FridayEnv. Fill in the values below."""
 
     SERVER_URL: str = "http://127.0.0.1:5000/"
     REALSENSE_CAMERAS: Dict = {
@@ -78,7 +78,7 @@ class DefaultEnvConfig:
 ##############################################################################
 
 
-class FrankaEnv(gym.Env):
+class FridayEnv(gym.Env):
     def __init__(
         self,
         hz=10,

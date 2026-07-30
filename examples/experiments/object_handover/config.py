@@ -10,7 +10,7 @@ from franka_env.envs.wrappers import (
 )
 from franka_env.envs.relative_env import DualRelativeFrame
 from franka_env.envs.franka_env import DefaultEnvConfig
-from franka_env.envs.dual_franka_env import DualFrankaEnv
+from franka_env.envs.dual_franka_env import DualFridayEnv
 import numpy as np
 from serl_launcher.wrappers.serl_obs_wrappers import SERLObsWrapper
 from serl_launcher.wrappers.chunking import ChunkingWrapper
@@ -182,7 +182,7 @@ class TrainConfig(DefaultTrainingConfig):
             config=RightEnvConfig,
         )
 
-        env = DualFrankaEnv(left_env, right_env)
+        env = DualFridayEnv(left_env, right_env)
         if not fake_env:
             env = DualSpacemouseIntervention(env, gripper_enabled=True)
         env = DualRelativeFrame(env)

@@ -1,0 +1,190 @@
+"""Robot server for the friday bimanual arms + head stereo camera.
+
+Mirrors the franka_server.py pattern (one Flask app, one shared rclpy node
+spun in a daemon thread) but serves BOTH arms from one process, with per-arm
+routes under /left/... and /right/... — the gym env's SERVER_URL is then
+    http://127.0.0.1:5000/left/     (LeftArmConfig)
+    http://127.0.0.1:5000/right/    (RightArmConfig)
+and the stock `url + "pose"` etc. calls compose correctly.
+
+ROS interface (all names are flags — the state topics are placeholders until
+the real EE-pose feedback topic exists):
+
+  publish   geometry_msgs/PoseStamped  --cmd_topic_left / --cmd_topic_right
+            (absolute EE pose target for the jacobian-transpose Cartesian
+            impedance controller; quat xyzw in msg fields)
+  subscribe geometry_msgs/PoseStamped  --state_topic_left / --state_topic_right
+            (current EE pose per arm)
+  subscribe sensor_msgs/CompressedImage --stereo_topic
+            (head stereo, both eyes side by side in one JPEG)
+
+Routes per arm (POST): pose {"arr": [x,y,z,qx,qy,qz,qw]}, getstate,
+clearerr (no-op, kept because the env posts it every step), update_param
+(no-op stub: impedance gains are owned by the controller side), jointreset
+(no-op stub). Shared: GET /getimage -> latest stereo JPEG bytes.
+
+getstate returns zeros for vel/force/torque/jacobian/q/dq/gripper_pos until
+real feedback exists — the env only relies on "pose". It returns HTTP 503
+until the first state message arrives, which the env turns into a clear
+startup error instead of serving a stale zero pose.
+
+Run (in the ROS environment, NOT the conda env):
+    python friday_server.py
+"""
+
+import threading
+
+import numpy as np
+import rclpy
+from absl import app, flags
+from flask import Flask, jsonify, request, Response
+from geometry_msgs.msg import PoseStamped
+from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
+from sensor_msgs.msg import CompressedImage
+
+FLAGS = flags.FLAGS
+flags.DEFINE_string("flask_url", "127.0.0.1", "Flask host")
+flags.DEFINE_integer("flask_port", 5000, "Flask port")
+flags.DEFINE_string("cmd_topic_left", "/hday/friday/left_wrist_pose_command",
+                    "left arm EE pose target topic")
+flags.DEFINE_string("cmd_topic_right", "/hday/friday/right_wrist_pose_command",
+                    "right arm EE pose target topic")
+flags.DEFINE_string("state_topic_left", "/hday/friday/left_ee_pose",
+                    "left arm EE pose state topic (PLACEHOLDER — set to the real one)")
+flags.DEFINE_string("state_topic_right", "/hday/friday/right_ee_pose",
+                    "right arm EE pose state topic (PLACEHOLDER — set to the real one)")
+flags.DEFINE_string("stereo_topic", "/hday/sensor/camera/stereo_head/image/compressed",
+                    "head stereo CompressedImage topic (gen2 mk1: stereo_head; "
+                    "stereo_body is the separate body-mounted camera)")
+flags.DEFINE_string("cmd_frame_id", "BASE", "frame_id stamped on pose commands")
+
+
+class FridayArm:
+    """One arm: pose command publisher + EE state subscription."""
+
+    def __init__(self, node: Node, cmd_topic: str, state_topic: str):
+        self.node = node
+        self.pos = None  # [x,y,z,qx,qy,qz,qw]; None until first state msg
+        self.pub = node.create_publisher(PoseStamped, cmd_topic, 10)
+        # sensor-data QoS (BEST_EFFORT): the hday sensor stack publishes with
+        # it (see remy2 model_inference ros2_source.py) — a default RELIABLE
+        # subscription would match nothing and this server would 503 forever.
+        node.create_subscription(
+            PoseStamped, state_topic, self._set_currpos, qos_profile_sensor_data
+        )
+
+    def _set_currpos(self, msg: PoseStamped):
+        self.pos = np.array([
+            msg.pose.position.x,
+            msg.pose.position.y,
+            msg.pose.position.z,
+            msg.pose.orientation.x,
+            msg.pose.orientation.y,
+            msg.pose.orientation.z,
+            msg.pose.orientation.w,
+        ])
+
+    def move(self, pose):
+        """Publish an absolute EE pose target: [x, y, z, qx, qy, qz, qw]."""
+        assert len(pose) == 7
+        msg = PoseStamped()
+        msg.header.frame_id = FLAGS.cmd_frame_id
+        msg.header.stamp = self.node.get_clock().now().to_msg()
+        msg.pose.position.x = float(pose[0])
+        msg.pose.position.y = float(pose[1])
+        msg.pose.position.z = float(pose[2])
+        msg.pose.orientation.x = float(pose[3])
+        msg.pose.orientation.y = float(pose[4])
+        msg.pose.orientation.z = float(pose[5])
+        msg.pose.orientation.w = float(pose[6])
+        self.pub.publish(msg)
+
+    def state(self):
+        if self.pos is None:
+            return None
+        # Everything but pose is a stub until real feedback topics exist.
+        return {
+            "pose": self.pos.tolist(),
+            "vel": [0.0] * 6,
+            "force": [0.0] * 3,
+            "torque": [0.0] * 3,
+            "q": [0.0] * 7,
+            "dq": [0.0] * 7,
+            "jacobian": np.zeros((6, 7)).tolist(),
+            "gripper_pos": 0.0,
+        }
+
+
+def main(_):
+    webapp = Flask(__name__)
+
+    rclpy.init()
+    node = Node("friday_server")
+
+    arms = {
+        "left": FridayArm(node, FLAGS.cmd_topic_left, FLAGS.state_topic_left),
+        "right": FridayArm(node, FLAGS.cmd_topic_right, FLAGS.state_topic_right),
+    }
+
+    stereo = {"jpeg": None}
+
+    def _set_stereo(msg: CompressedImage):
+        stereo["jpeg"] = bytes(msg.data)
+
+    node.create_subscription(
+        CompressedImage, FLAGS.stereo_topic, _set_stereo, qos_profile_sensor_data
+    )
+
+    # -- per-arm routes ----------------------------------------------------
+    @webapp.route("/<side>/pose", methods=["POST"])
+    def pose(side):
+        if side not in arms:
+            return "unknown arm", 404
+        arms[side].move(np.array(request.json["arr"]))
+        return "Moved"
+
+    @webapp.route("/<side>/getstate", methods=["POST"])
+    def getstate(side):
+        if side not in arms:
+            return "unknown arm", 404
+        state = arms[side].state()
+        if state is None:
+            return jsonify({"error": "no EE pose received yet"}), 503
+        return jsonify(state)
+
+    @webapp.route("/<side>/clearerr", methods=["POST"])
+    def clearerr(side):
+        return "ok"  # no error-recovery concept on this stack; env posts it every step
+
+    @webapp.route("/<side>/update_param", methods=["POST"])
+    def update_param(side):
+        return "ok"  # gains owned by the impedance controller side; accepted and ignored
+
+    @webapp.route("/<side>/jointreset", methods=["POST"])
+    def jointreset(side):
+        return "ok"  # no joint-space reset path yet; reset flows through pose targets
+
+    # -- shared routes -----------------------------------------------------
+    @webapp.route("/getimage", methods=["GET"])
+    def getimage():
+        # Serve under BOTH bare and per-arm prefixes so an arm env's
+        # url + "getimage" works no matter which arm carries the cameras.
+        if stereo["jpeg"] is None:
+            return jsonify({"error": "no stereo frame received yet"}), 503
+        return Response(stereo["jpeg"], mimetype="image/jpeg")
+
+    @webapp.route("/<side>/getimage", methods=["GET"])
+    def getimage_side(side):
+        return getimage()
+
+    ros_thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
+    ros_thread.start()
+
+    print(f"friday_server: cmd -> {FLAGS.cmd_topic_left} | {FLAGS.cmd_topic_right}")
+    print(f"friday_server: state <- {FLAGS.state_topic_left} | {FLAGS.state_topic_right}")
+    webapp.run(host=FLAGS.flask_url, port=FLAGS.flask_port)
+
+
+if __name__ == "__main__":
+    app.run(main)

@@ -7,9 +7,9 @@ import requests
 import copy
 import gymnasium as gym
 import time
-from franka_env.envs.franka_env import FrankaEnv
+from franka_env.envs.franka_env import FridayEnv
 
-class USBEnv(FrankaEnv):
+class USBEnv(FridayEnv):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
     

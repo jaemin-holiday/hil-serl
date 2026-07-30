@@ -7,7 +7,7 @@ import copy
 from franka_env.spacemouse.spacemouse_expert import SpaceMouseExpert
 import requests
 from scipy.spatial.transform import Rotation as R
-from franka_env.envs.franka_env import FrankaEnv
+from franka_env.envs.franka_env import FridayEnv
 from typing import List
 
 sigmoid = lambda x: 1 / (1 + np.exp(-x))
