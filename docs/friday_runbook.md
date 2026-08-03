@@ -28,8 +28,8 @@ J^T Cartesian impedance controller (real driver — or the twin, §6)
 
 | Process | Where (real robot) | Env |
 |---|---|---|
-| `friday_server.py` | ops PC (jazzy on host) — run STRAIGHT from this repo, no container, no copy | distro python + `pip install flask absl-py scipy` |
-| `teleop_test.py` / actor / learner | ops PC or any host reaching :5000 | conda `hilserl` (py3.10, jax) |
+| `friday_server.py` | ops PC (jazzy on host) — run STRAIGHT from this repo, no container, no copy. Or the onboard Jetson (§4.6) | distro python + `pip install flask absl-py scipy` |
+| `teleop_test.py` / actor / learner | ops PC or any host reaching :5000; teleop/data-collection also runs all-on-Jetson (§4.6) | conda `hilserl` (py3.10, jax) |
 | Quest app | headset, USB to the teleop machine | — |
 | impedance controller | robot side (already deployed) | — |
 
@@ -147,6 +147,47 @@ TESTING.md §2.3 (interventions land in RL + demo buffers).
 
 Restart rules: config/wrapper/env edits → restart teleop/actor only (+
 reconnect app). Server edit → restart server.
+
+### 4.6 Variant — everything on the onboard Jetson (headless)
+
+Teleop bring-up and data collection (`teleop_test`, `record_success_fail`,
+`record_demos`) do NO policy inference — the loop is Quest TCP + HTTP +
+numpy/scipy at 10 Hz. All of it runs on the headless Jetson over ssh; the
+whole stack is display-free (the ESC listener disables itself without X —
+Quest X button is the episode-end control).
+
+One non-obvious requirement: `config.py` IMPORTS jax/flax/serl_launcher at
+module level even though teleop never computes with them — plain CPU jax
+(aarch64 wheel) satisfies the import.
+
+```bash
+# once, on the Jetson (py3.10 venv/conda)
+pip install -e serl_launcher -e serl_robot_infra
+pip install jax pynput               # CPU jax — import-only for teleop
+pip install flask absl-py scipy      # server side
+sudo apt install adb
+
+# run (all via ssh):
+# shell 1 — server (robot topics are local to the Jetson: ideal placement)
+python3 serl_robot_infra/robot_servers/friday_server.py \
+    --fk_urdf=<path>/friday_gen1_mk5.urdf
+
+# shell 2 — Quest USB plugged into the JETSON
+adb reverse tcp:8000 tcp:8000        # first time: accept the headset's
+                                     # "Allow USB debugging" prompt; udev rule
+                                     # (vendor 2833) if adb says no permissions
+cd examples/experiments/friday_reach && python teleop_test.py
+# headset: Remy2 app, TCP wired, localhost:8000, controller mode
+```
+
+`SERVER_URL` stays 127.0.0.1 (server and env on the same Jetson).
+
+What does NOT belong on the Jetson: the learner (needs the GPU workstation)
+and the actor with a real policy (jax-CUDA has no official aarch64 wheels;
+CPU inference of the ResNet encoder is marginal at 10 Hz). For RL, split:
+Jetson runs `friday_server` only; workstation runs actor+learner with
+`SERVER_URL = "http://<jetson-ip>:5000/<side>/"` in config.py and the Quest
+USB moved to the workstation.
 
 ## 5. Hard-won lessons (mostly learned on the twin, apply everywhere)
 
