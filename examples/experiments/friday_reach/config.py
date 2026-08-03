@@ -31,11 +31,12 @@ from experiments.config import DefaultTrainingConfig
 # ---------------------------------------------------------------------------
 # Teleop exaggeration: robot displacement converges to RATIO x hand
 # displacement while gripped. 1.0 = 1:1 mimic.
-TELEOP_EXAGGERATE_POS = 1.0
+TELEOP_EXAGGERATE_POS = 2.0
 TELEOP_EXAGGERATE_ROT = 1.0
 
+
 # Workspace box half-width around each arm's RESET_POSE (xyz m, euler rad).
-POSE_LIMIT_DELTA = np.array([0.15, 0.15, 0.15, 0.4, 0.4, 0.4])
+POSE_LIMIT_DELTA = np.array([2.0, 2.0, 2.0, 1.5708, 1.5708, 1.5708])
 
 
 class _ArmConfig(FridayArmConfig):
