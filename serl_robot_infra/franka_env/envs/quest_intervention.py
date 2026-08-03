@@ -17,22 +17,29 @@ resumes. The step-level `intervened` flag is the OR of the two sides — a step
 where only one grip is held stores the policy's action for the OTHER arm as
 part of the "demonstration".
 
-Coupling: position-error (DROID-style position-position teleop). On grip
-press, snapshot controller pose AND robot EE pose ("clutch"). While held:
+Mapping: anchored feedforward, matching every other in-house teleop
+(remy2 compute_wrist_pose, model_inference DeltaWrist, teleop_clutch). On
+grip press, snapshot controller pose AND robot EE pose ("clutch"); the EE is
+read ONCE there and never again. While held:
 
-    action_xyz = ((hand_p - hand_p0) - (ee_p - ee_p0)) / ACTION_SCALE[0]
-    action_rot = rotvec( (hand_R hand_R0^T) (ee_R ee_R0^T)^T ) / ACTION_SCALE[1]
+    desired_p = ee_p0 + gain * (hand_p - hand_p0)
+    desired_R = (hand_R hand_R0^T) @ ee_R0
 
-clipped to [-1, 1]. Free space: the arm tracks and the error stays small.
-Contact: the arm is blocked, the hand pushes past the surface, the standing
-error commands a steady force through the impedance controller — penetration
-depth is the force knob, exactly like held SpaceMouse deflection. The clip
+The action is whatever moves the env's command state to `desired`:
+
+    action = (desired - cmdpos) / ACTION_SCALE   clipped to [-1, 1]
+
+Because measured EE never re-enters, robot motion cannot feed back into the
+target (a closed-loop position-error form mirrors any EE disturbance into the
+command and drifts). Contact still gives a steady force: the arm is blocked,
+the hand pushes past, and the standing `desired - measured` gap is the
+impedance spring's deflection — penetration depth is the force knob. The clip
 means max commanded step equals the policy's max, so interventions never
 produce state-action pairs the policy cannot reproduce.
 
 Release drops the anchors ("lift the mouse off the pad"): reposition the hand
-anywhere, press again, fresh snapshot, robot stays put. Since the error is
-zero by construction at the press instant, handover cannot jump.
+anywhere, press again, fresh snapshot, robot stays put. At the press instant
+desired == cmdpos == measured EE, so handover cannot jump.
 """
 
 import numpy as np
@@ -44,35 +51,37 @@ from franka_env.quest_reader import QuestReader
 SIDES = ("left", "right")  # action layout: left = [0:6], right = [6:12]
 
 
-def coupling_action(hand, hand0, ee, ee0, pos_scale, rot_scale,
+def coupling_action(hand, hand0, ee0, cmd, pos_scale, rot_scale,
                     pos_gain=1.0, rot_gain=1.0):
-    """Position-error coupling for one arm -> normalized 6D action.
+    """Anchored feedforward for one arm -> normalized 6D action.
 
-    hand/hand0/ee/ee0: (p (3,), R (3,3)) current and at-clutch poses, all in
-    the same (BASE-aligned) world frame. Returns (a_xyz, a_rot), each clipped
-    to [-1, 1]. Identically zero when hand == hand0 and ee == ee0.
+    hand/hand0/ee0/cmd: (p (3,), R (3,3)) — current hand, hand at clutch, EE
+    at clutch, and the env's current command state; all in the same
+    (BASE-aligned) world frame. Measured EE appears ONLY through ee0, so
+    robot motion cannot feed back into the target.
 
-    pos_gain/rot_gain: teleop exaggeration — the hand delta is multiplied
-    before differencing, so the robot converges to gain x hand displacement
-    (rotation: the hand's delta rotation angle is scaled about its axis).
-    Amplifies operator motion WITHOUT touching ACTION_SCALE (the policy's
-    action space) or the impedance gains (stability): the output stays a
-    legal [-1, 1] action, only its saturation profile changes.
+    Returns (a_xyz, a_rot) clipped to [-1, 1]; the action is what moves cmd
+    onto `ee0 + gain * hand-delta`. Zero when hand == hand0 and cmd == ee0.
+
+    pos_gain/rot_gain: teleop exaggeration — the hand delta is multiplied, so
+    the target moves gain x hand displacement (rotation: delta angle scaled
+    about its axis). Amplifies operator motion WITHOUT touching ACTION_SCALE
+    (the policy's action space) or the impedance gains (stability).
     """
     hand_p, hand_R = hand
     hand_p0, hand_R0 = hand0
-    ee_p, ee_R = ee
     ee_p0, ee_R0 = ee0
+    cmd_p, cmd_R = cmd
 
-    err_p = pos_gain * (hand_p - hand_p0) - (ee_p - ee_p0)
-    a_xyz = np.clip(err_p / pos_scale, -1.0, 1.0)
+    desired_p = ee_p0 + pos_gain * (hand_p - hand_p0)
+    a_xyz = np.clip((desired_p - cmd_p) / pos_scale, -1.0, 1.0)
 
-    # World-frame left deltas; mismatch rotation -> axis-angle.
+    # World-frame left delta on the hand, applied to the anchored EE rotation.
     dR_hand = Rotation.from_matrix(hand_R @ hand_R0.T)
     if rot_gain != 1.0:
         dR_hand = Rotation.from_rotvec(rot_gain * dR_hand.as_rotvec())
-    dR_ee = ee_R @ ee_R0.T
-    err_R = Rotation.from_matrix(dR_hand.as_matrix() @ dR_ee.T).as_rotvec()
+    desired_R = dR_hand.as_matrix() @ ee_R0
+    err_R = Rotation.from_matrix(desired_R @ cmd_R.T).as_rotvec()
     a_rot = np.clip(err_R / rot_scale, -1.0, 1.0)
     return a_xyz, a_rot
 
@@ -109,10 +118,20 @@ class QuestIntervention(gym.ActionWrapper):
         self.left, self.right = False, False  # primary buttons, passed via info
         self._prev_x = False  # X rising-edge -> operator-triggered episode end
 
-    def _ee_pose(self, side):
-        arm = self.env.unwrapped.env_left if side == "left" else self.env.unwrapped.env_right
-        pose = arm.currpos  # xyz + quat xyzw, base frame, refreshed each step by the arm env
+    def _arm(self, side):
+        return self.env.unwrapped.env_left if side == "left" else self.env.unwrapped.env_right
+
+    @staticmethod
+    def _split(pose):
         return np.asarray(pose[:3], dtype=np.float64), Rotation.from_quat(pose[3:]).as_matrix()
+
+    def _ee_pose(self, side):
+        """Measured EE — used ONLY to anchor at the grip press."""
+        return self._split(self._arm(side).currpos)
+
+    def _cmd_pose(self, side):
+        """The env's internal command state (never re-anchored to measurement)."""
+        return self._split(self._arm(side).cmdpos)
 
     def action(self, action: np.ndarray):
         """Returns (action, replaced). Grip-held sides get the coupling action."""
@@ -135,19 +154,22 @@ class QuestIntervention(gym.ActionWrapper):
                 continue
 
             hand_p, hand_R = hand
-            ee_p, ee_R = self._ee_pose(side)
 
             if not self._engaged[side]:
+                # Measured EE is read HERE and nowhere else: it anchors the
+                # target and re-seeds the command, so this engagement starts
+                # from where the robot actually is.
+                ee_p, ee_R = self._ee_pose(side)
                 self._hand0[side] = (hand_p.copy(), hand_R.copy())
                 self._ee0[side] = (ee_p.copy(), ee_R.copy())
+                self._arm(side).reseed_cmd()
                 self._engaged[side] = True
-                # Error is identically zero at the press instant; fall through
-                # and compute it anyway (no special case, no jump).
+                # desired == cmd at this instant; fall through, action is zero.
 
             pos_scale, rot_scale = self._scales[side]
             a_xyz, a_rot = coupling_action(
                 (hand_p, hand_R), self._hand0[side],
-                (ee_p, ee_R), self._ee0[side],
+                self._ee0[side], self._cmd_pose(side),
                 pos_scale, rot_scale,
                 pos_gain=self.pos_exaggerate, rot_gain=self.rot_exaggerate,
             )

@@ -83,6 +83,7 @@ def test_right_multiplied_offsets_cancel_in_delta():
 
 
 def test_coupling_zero_at_latch():
+    """At the press instant cmd == ee0 and hand == hand0 -> zero action."""
     rng = np.random.default_rng(1)
     p = rng.normal(size=3)
     R = Rotation.random(random_state=rng).as_matrix()
@@ -92,9 +93,9 @@ def test_coupling_zero_at_latch():
     assert np.allclose(a_xyz, 0) and np.allclose(a_rot, 0), "nonzero action at latch"
 
 
-def test_coupling_tracks_then_releases():
-    """Hand moves 1 cm +x, robot hasn't -> positive x action. Robot catches
-    up -> action returns to zero (self-healing, no lost motion)."""
+def test_coupling_drives_cmd_to_anchored_target():
+    """Hand moves 1 cm +x -> action drives cmd toward ee0 + 1 cm. Once cmd is
+    there, action returns to zero."""
     I = np.eye(3)
     hand0 = (np.zeros(3), I)
     ee0 = (np.array([0.5, 0, 0.3]), I)
@@ -103,18 +104,37 @@ def test_coupling_tracks_then_releases():
     a_xyz, _ = coupling_action(hand, hand0, ee0, ee0, 0.02, 0.1)
     assert np.allclose(a_xyz, [0.5, 0, 0]), f"expected half-scale +x, got {a_xyz}"
 
-    ee_caught_up = (ee0[0] + np.array([0.01, 0, 0]), I)
-    a_xyz, _ = coupling_action(hand, hand0, ee_caught_up, ee0, 0.02, 0.1)
-    assert np.allclose(a_xyz, 0, atol=1e-12), "error must vanish when robot catches up"
+    cmd_arrived = (ee0[0] + np.array([0.01, 0, 0]), I)
+    a_xyz, _ = coupling_action(hand, hand0, ee0, cmd_arrived, 0.02, 0.1)
+    assert np.allclose(a_xyz, 0, atol=1e-12), "action must vanish once cmd reaches target"
+
+
+def test_measured_ee_motion_cannot_move_target():
+    """THE anti-drift invariant: with hand and cmd fixed, the action is
+    identical no matter where the measured EE is — measured EE enters only
+    through the latch anchor, so robot disturbance cannot feed back."""
+    I = np.eye(3)
+    hand0 = (np.zeros(3), I)
+    hand = (np.array([0.02, 0, 0]), I)
+    ee0 = (np.zeros(3), I)
+    cmd = (np.array([0.005, 0, 0]), I)
+    a_ref, r_ref = coupling_action(hand, hand0, ee0, cmd, 0.02, 0.1)
+    # coupling_action has no parameter that could carry measured EE at all;
+    # re-evaluating with the same inputs is by construction identical.
+    for _ in range(3):
+        a, r = coupling_action(hand, hand0, ee0, cmd, 0.02, 0.1)
+        assert np.allclose(a, a_ref) and np.allclose(r, r_ref)
+    import inspect
+    params = inspect.signature(coupling_action).parameters
+    assert "ee" not in params, "live measured-EE argument reintroduced -> drift risk"
 
 
 def test_coupling_saturation_is_steady_force():
-    """Hand held 3 cm past a blocked robot -> saturated, CONSTANT action —
-    the held-deflection force analogy."""
+    """Hand 3 cm past where cmd sits -> saturated, CONSTANT action."""
     I = np.eye(3)
     hand0 = (np.zeros(3), I)
     ee0 = (np.zeros(3), I)
-    hand = (np.array([0.03, 0, 0]), I)  # 3 cm past, scale 0.02 -> saturates
+    hand = (np.array([0.03, 0, 0]), I)  # 3 cm, scale 0.02 -> saturates
     a1, _ = coupling_action(hand, hand0, ee0, ee0, 0.02, 0.1)
     a2, _ = coupling_action(hand, hand0, ee0, ee0, 0.02, 0.1)
     assert np.allclose(a1, [1, 0, 0]) and np.allclose(a1, a2), "saturation not steady"

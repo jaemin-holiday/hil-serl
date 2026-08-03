@@ -132,14 +132,19 @@ class FridayArmEnv(FridayEnv):
         # to its own noise through the loop delay (wrist shiver).
         self.cmdpos = self.currpos.copy()
 
-        from pynput import keyboard
+        # ESC listener needs an X display; headless (e.g. Jetson) runs fine
+        # without it — the Quest X button is the episode-end control anyway.
+        try:
+            from pynput import keyboard
 
-        def on_press(key):
-            if key == keyboard.Key.esc:
-                self.terminate = True
+            def on_press(key):
+                if key == keyboard.Key.esc:
+                    self.terminate = True
 
-        self.listener = keyboard.Listener(on_press=on_press)
-        self.listener.start()
+            self.listener = keyboard.Listener(on_press=on_press)
+            self.listener.start()
+        except Exception as e:  # noqa: BLE001 - no display / no pynput
+            print(f"ESC listener disabled ({type(e).__name__}); use Quest X to end episodes")
         print(f"Initialized FridayArmEnv @ {self.url}")
 
     # -- action ------------------------------------------------------------
@@ -179,6 +184,16 @@ class FridayArmEnv(FridayEnv):
 
     def _send_gripper_command(self, pos, mode="binary"):
         pass  # no gripper on this robot — fingers hold a constant target
+
+    def reseed_cmd(self) -> None:
+        """Re-anchor the internal command state to the measured EE pose.
+
+        Called by the intervention wrapper on a grip rising edge, so a
+        re-grip starts commanding from where the robot actually IS — any
+        lead the cmdpos integrator wound up before release (soft-gain static
+        compensation) is discarded instead of being carried into the new
+        engagement."""
+        self.cmdpos = self.currpos.copy()
 
     def go_to_reset(self, joint_reset=False):
         """Base version minus its `_send_pos_command(self.currpos)` opener —
@@ -225,7 +240,9 @@ class FridayArmEnv(FridayEnv):
         if resp.status_code != 200:
             raise RuntimeError(
                 f"friday_server at {self.url} has no robot state yet "
-                f"(HTTP {resp.status_code}). Is the EE-pose topic publishing?"
+                f"(HTTP {resp.status_code}). FK mode: is joint_state arriving "
+                "and was the server started with --fk_urdf? State-topic mode: "
+                "is the EE-pose topic publishing?"
             )
         ps = resp.json()
         self.currpos = np.array(ps["pose"])
