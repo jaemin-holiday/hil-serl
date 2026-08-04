@@ -25,9 +25,7 @@ ros2 topic list | grep -E "impedance_target|joint_state|stereo_head"
 # [ROS] start the server — FK mode (EE pose from joint_state + URDF; no
 # EE-pose topic needed on the robot). Cmd topics default to the canonical
 # /hday/friday/impedance_target_* (message_names.h).
-python serl_robot_infra/robot_servers/friday_server.py \
-    --fk_urdf=<path>/friday_gen1_mk5.urdf
-```
+python serl_robot_infra/robot_servers/friday_server.py
 
 Expect: two startup lines printing cmd/state topics, Flask on :5000.
 

@@ -21,7 +21,7 @@ routes: `http://127.0.0.1:5000/left/...` and `.../right/...`.
 - publish `PoseStamped` → `/hday/friday/impedance_target_{left,right}` (message_names.h canon)
   (absolute EE target for the jacobian-transpose impedance controller)
 - subscribe `JointState` ← `/hday/friday/joint_state` → **FK mode**
-  (`--fk_urdf=<path>/friday_gen1_mk5.urdf`): EE pose computed server-side,
+  (URDF bundled in-repo): EE pose computed server-side,
   chain `BASE → waist_1..5 → arm_1..7 → arm_ee`, validated vs the twin at
   0.00 mm / 0.000°. No EE-pose topic needed on the robot. (`--state_topic_*`
   PoseStamped subs remain as the fallback mode.)
@@ -50,8 +50,7 @@ A (right) / X (left) buttons pass through `info["right"]` / `info["left"]`.
 
 ```bash
 # 0. ROS env, robot LAN
-python serl_robot_infra/robot_servers/friday_server.py \
-    --fk_urdf=<path>/friday_gen1_mk5.urdf              # cmd topics default to canon
+python serl_robot_infra/robot_servers/friday_server.py
 
 # 1. teleop only — verify clutch, impedance tracking, workspace clamps
 cd examples/experiments/friday_reach && python teleop_test.py

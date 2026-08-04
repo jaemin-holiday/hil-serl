@@ -19,7 +19,7 @@ QuestReader ─▶ QuestIntervention ─▶ FridayArmEnv x2 ─▶ DualFridayEnv
 friday_server.py  (ROS: rclpy + Flask, ONE self-contained script)
    │ publish  PoseStamped  /hday/friday/impedance_target_{left,right}   (canon)
    │ subscribe JointState  /hday/friday/joint_state -> URDF FK = EE pose
-   │   (FK mode, --fk_urdf; validated vs twin: 0.00 mm / 0.000 deg.
+   │   (FK mode, URDF bundled in-repo; validated vs twin: 0.00 mm / 0.000 deg.
    │    Fallback: --state_topic_* PoseStamped subs)
    │ subscribe CompressedImage /hday/sensor/camera/stereo_head/image/compressed
    ▼
@@ -87,9 +87,12 @@ knobs appear ONCE (top of file / `_ArmConfig`) and apply to both arms.
 ```bash
 pip install flask absl-py scipy          # once
 source /opt/ros/jazzy/setup.bash         # setup.zsh in zsh
-python3 serl_robot_infra/robot_servers/friday_server.py \
-    --fk_urdf=<path>/friday_gen1_mk5.urdf
+python3 serl_robot_infra/robot_servers/friday_server.py
 ```
+
+The URDF is bundled at `serl_robot_infra/franka_env/descriptions/` (kinematics
+only — mesh refs are never read, so no mesh files are needed); `--fk_urdf`
+overrides it, `--fk_urdf=""` falls back to `--state_topic_*` subscriptions.
 
 FK chain: `BASE -> waist_1..5 -> {side}_arm_1..7 -> {side}_arm_ee`
 (`--fk_root_link/--fk_ee_link_*` to override — EE link and root frame MUST
@@ -169,8 +172,7 @@ sudo apt install adb
 
 # run (all via ssh):
 # shell 1 — server (robot topics are local to the Jetson: ideal placement)
-python3 serl_robot_infra/robot_servers/friday_server.py \
-    --fk_urdf=<path>/friday_gen1_mk5.urdf
+python3 serl_robot_infra/robot_servers/friday_server.py
 
 # shell 2 — Quest USB plugged into the JETSON
 adb reverse tcp:8000 tcp:8000        # first time: accept the headset's
@@ -236,8 +238,7 @@ done
 ros2 topic hz /hday/friday/left_ee_pose        # ~50 Hz gate
 
 # C [container] server (same command as real; twin consumes the same canon topics)
-python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py \
-    --fk_urdf=/workspaces/holiday/descriptions/descriptions/friday/friday_gen1_mk5.urdf
+python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py
 
 # D [host] measure RESET_POSE for the twin posture (§4.3 snippet), then
 #   conda + adb reverse + teleop_test.py exactly as §4.4

@@ -32,6 +32,7 @@ Run (in the ROS environment, NOT the conda env):
     python friday_server.py
 """
 
+import os
 import threading
 
 import xml.etree.ElementTree as ET
@@ -66,9 +67,14 @@ flags.DEFINE_string("cmd_frame_id", "BASE", "frame_id stamped on pose commands")
 # FK mode: compute the EE pose HERE from /joint_state + URDF instead of
 # requiring the robot to publish EE-pose topics (state_topic_* are then
 # ignored). Enable by passing --fk_urdf.
-flags.DEFINE_string("fk_urdf", None,
-                    "URDF path; when set, EE pose comes from FK on the joint-state "
-                    "topic instead of the state_topic_* subscriptions")
+_BUNDLED_URDF = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "franka_env", "descriptions", "friday_gen1_mk5.urdf",
+)
+flags.DEFINE_string("fk_urdf", _BUNDLED_URDF,
+                    "URDF for FK-based EE pose (default: the copy bundled in this "
+                    "repo — kinematics only, no meshes needed). Pass an empty "
+                    "string to fall back to the state_topic_* subscriptions.")
 flags.DEFINE_string("fk_joint_state_topic", "/hday/friday/joint_state",
                     "JointState topic for FK mode")
 flags.DEFINE_string("fk_root_link", "BASE", "FK base frame (must be the frame "

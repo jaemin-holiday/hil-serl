@@ -1,0 +1,2913 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="FM25A0005">
+  <asset>
+    <material name="aluminum" albedo="0.933 0.912 0.853" metallic="1.0" roughness="0.0" />
+    <material name="aluminum_anodized_carbon" albedo="0.3 0.3 0.3" metallic="1.0" roughness="0.0" />
+    <material name="polyurethane_white" albedo="1.0 1.0 1.0" metallic="0.0" roughness="1.0" />
+    <material name="polyurethane_green" albedo="0.0 1.0 0.0" metallic="0.0" roughness="1.0" />
+    <material name="polyurethane_gray" albedo="0.5 0.5 0.5" metallic="0.0" roughness="1.0" />
+    <material name="polyurethane_black" albedo="0.1 0.1 0.1" metallic="0.0" roughness="1.0" />
+    <material name="silicon" albedo="1.0 1.0 1.0" metallic="0.0" roughness="1.0" />
+    <material name="rubber" albedo="0.023 0.023 0.023" metallic="0.0" roughness="1.0" />
+    <material name="plastic_shiny_black" albedo="0.0 0.0 0.0" metallic="1.0" roughness="0.1"/>
+
+    <surface name="aluminum" friction="0.3" />
+    <surface name="polyurethane" friction="0.5" />
+    <surface name="silicon" friction="1.0" />
+    <surface name="rubber" friction="5.0" />
+
+    <surface_pair surface1="aluminum" surface2="aluminum" friction="0.3" />
+  </asset>
+  <link name="BASE">
+    <inertial>
+      <origin xyz="1.75045845306481E-05 -0.0042584914937362 0.032751912864302" rpy="0 0 0" />
+      <mass value="74.7754001395149" />
+      <inertia ixx="2.58737420092528" ixy="0.000319763914205704" ixz="0.000155649863391633" iyy="2.1055877773509" iyz="3.60872462717528E-05" izz="4.02907932324286" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/base_white.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material>
+    </visual>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/base_black.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material>
+    </visual>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/base_silver.obj" />
+      </geometry>
+      <material asset="polyurethane_gray"></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/base.npz" />
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="BASE_SPHERE">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.0" />
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+    </inertial>
+    <collision>
+      <origin xyz="0 0 2.5" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.45" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="base_to_base_sphere" type="fixed">
+    <parent link="BASE" />
+    <child link="BASE_SPHERE" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
+  <link name="footprint">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.0" />
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+    </inertial>
+  </link>
+  <joint name="footprint" type="fixed">
+    <parent link="BASE" />
+    <child link="footprint" />
+    <origin xyz="0 0 -0.105" rpy="0 0 -1.5708" />
+  </joint>
+
+
+  <!-- casters -->
+  <link name="caster_1">
+    <inertial>
+      <mass value="0.1"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.01" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.105" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="caster_1" type="fixed">
+    <parent link="BASE" />
+    <child link="caster_1" />
+    <origin xyz="0.0 -0.25 -0.0051" rpy="0 0 0" />
+  </joint>
+
+  <link name="caster_2">
+    <inertial>
+      <mass value="0.1"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.01" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.105" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="caster_2" type="fixed">
+    <parent link="BASE" />
+    <child link="caster_2" />
+    <origin xyz="0.0 0.25 -0.0051" rpy="0 0 0" />
+  </joint>
+
+
+  <!-- wheeles -->
+  <joint name="right_wheel_joint" type="revolute">
+      <parent link="BASE" />
+      <child link="right_wheel" />
+      <origin xyz="-0.252 0.0 -0.0051" rpy="0 0 -1.57079632679 " />
+      <axis xyz="0 1 0" />
+      <limit lower="-9999999.9" upper="9999999.9" velocity="30.14" effort="10000.0" />
+    </joint>
+
+  <link name="right_wheel">
+    <inertial>
+      <mass value="1.0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+      <friction value="5.0"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.03 0" rpy="0 0 1.57079632679 " />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/wheel.obj"/>
+      </geometry>
+      <material asset="polyurethane_gray"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 1.57079632679 " />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/tire.obj"/>
+      </geometry>
+      <material asset="rubber"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="1.57079632679  0 0" />
+      <geometry>
+        <cylinder length="0.03" radius="0.105"/>
+      </geometry>
+      <surface asset="rubber"/>
+    </collision>
+  </link>
+
+  <joint name="left_wheel_joint" type="revolute">
+    <parent link="BASE" />
+    <child link="left_wheel" />
+    <origin xyz="0.252 0.0 -0.0051" rpy="0 0 -1.57079632679 " />
+    <axis xyz="0 1 0" />
+    <limit lower="-9999999.9" upper="9999999.9" velocity="30.14" effort="10000.0" />
+  </joint>
+
+  <link name="left_wheel">
+    <inertial>
+      <mass value="1.0"/>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+      <friction value="5.0"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0.03 0" rpy="0 0 -1.57079632679 " />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/wheel.obj"/>
+      </geometry>
+      <material asset="polyurethane_gray"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 1.57079632679 " />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/tire.obj"/>
+      </geometry>
+      <material asset="rubber"/>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="1.57079632679  0 0" />
+      <geometry>
+        <cylinder length="0.03" radius="0.105"/>
+      </geometry>
+      <surface asset="rubber"/>
+    </collision>
+  </link>
+
+
+  <link name="waist_1">
+    <inertial>
+      <origin xyz="0.00148651 -0.07011826 0.00046923" rpy="0 0 0" />
+      <mass value="3.87084693" />
+      <inertia ixx="0.02034089" ixy="0.00013467" ixz="0.00000265" iyy="0.01814122" iyz="0.00056258" izz="0.01576442" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/waist_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material></visual>
+  </link>
+  <joint name="waist_1" type="revolute">
+    <origin xyz="0 0 0.0774999999999989" rpy="-1.5707963267949 0 -1.5707963267949" />
+    <parent link="BASE" />
+    <child link="waist_1" />
+    <axis xyz="0 -1 0" />
+    <limit effort="87.0" lower="-6.0087" upper="6.0087" velocity="2.0" />
+  </joint>
+  <link name="waist_2">
+    <inertial>
+      <origin xyz="0.17061374 -0.03517321 0.01979936" rpy="0 0 0" />
+      <mass value="11.63066983" />
+      <inertia ixx="0.04597421" ixy="0.06613904" ixz="-0.00011938" iyy="0.33139702" iyz="0.00063214" izz="0.34889791" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/waist_2.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/waist_2_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="waist_2" type="revolute">
+    <origin xyz="0 -0.1675 0" rpy="3.14159265359265358979 0 -1.7896828584834585" />
+    <parent link="waist_1" />
+    <child link="waist_2" />
+    <axis xyz="0 0 -1" />
+    <limit effort="87.0" lower="-1.4708" upper="0.9472" velocity="2.0" />
+  </joint>
+  <link name="waist_3">
+    <inertial>
+      <origin xyz="0.00284671 0.05264572 0.16822470" rpy="0 0 0" />
+      <mass value="4.89791552" />
+      <inertia ixx="0.08146094" ixy="0.00030713" ixz="-0.00011349" iyy="0.09310771" iyz="-0.01083018" izz="0.03545366" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/waist_3.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/waist_3_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="waist_3" type="revolute">
+    <origin xyz="0.341648942630047 -0.0759999999984945 0" rpy="0.43777306337711686 1.5707963267949 0" />
+    <parent link="waist_2" />
+    <child link="waist_3" />
+    <axis xyz="1 0 0" />
+    <limit effort="87.0" lower="-0.9472" upper="2.65291" velocity="2.0" />
+  </joint>
+  <link name="waist_4">
+    <inertial>
+      <origin xyz="-0.01430922 0.04457380 -0.00031075" rpy="0 0 0" />
+      <mass value="8.00290922" />
+      <inertia ixx="0.04666842" ixy="-0.00518019" ixz="0.00002751" iyy="0.01949052" iyz="0.00015741" izz="0.04549557" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/waist_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material></visual>
+  </link>
+  <joint name="waist_4" type="revolute">
+    <origin xyz="0 0.0759999999984945 0.341648942629712" rpy="1.3519097951063417 0 0" />
+    <parent link="waist_3" />
+    <child link="waist_4" />
+    <axis xyz="1 0 0" />
+    <limit effort="87.0" lower="-1.8326" upper="0.9472" velocity="2.0" />
+  </joint>
+  <link name="waist_5">
+    <inertial>
+      <origin xyz="0.00018339 0.14264817 -0.01405479" rpy="0 0 0" />
+      <mass value="16.41077253" />
+      <inertia ixx="0.16722376" ixy="-0.00039406" ixz="-0.00026984" iyy="0.17290160" iyz="-0.00396731" izz="0.24296352" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/body.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <visual>
+      <origin xyz="0 -0.006322245945349 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/body_backpack.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material></visual>
+    <visual>
+      <origin xyz="0 0.194843979673063 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/body_logo.obj" />
+      </geometry>
+      <material asset="polyurethane_green"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/waist_5_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="waist_5" type="revolute">
+    <origin xyz="0 0.141999999999935 0" rpy="0 0 0" />
+    <parent link="waist_4" />
+    <child link="waist_5" />
+    <axis xyz="0 1 0" />
+    <limit effort="87.0" lower="-5.9388" upper="5.9388" velocity="2.0" />
+  </joint>
+
+  <link name="left_arm_1">
+    <inertial>
+      <origin xyz="0.0553053272665 0.00924259020289 -0.00653112187345" rpy="0 0 0" />
+      <mass value="1.31526593649" />
+      <inertia
+        ixx="0.00133855355251"
+        ixy="-4.00854423419e-05"
+        ixz="2.77056484621e-05"
+        iyy="0.00155811310867"
+        iyz="5.51441816919e-06"
+        izz="0.00166913903426" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material></visual>
+  </link>
+  <joint name="left_arm_1" type="revolute">
+    <origin xyz="0.16218 0.22943 0" rpy="0 0 0" />
+    <parent link="waist_5" />
+    <child link="left_arm_1" />
+    <axis xyz="-0.984807753012208 -0.173648177666932 0" />
+    <limit effort="87.0" lower="-0.4236" upper="2.5180" velocity="2.0" />
+  </joint>
+  <link name="left_arm_2">
+    <inertial>
+      <origin xyz="0.00853153261238 -0.0881666908825 -0.0016574643845" rpy="0 0 0" />
+      <mass value="1.28912585211" />
+      <inertia
+        ixx="0.0027676874962"
+        ixy="8.62189855002e-05"
+        ixz="9.36261486156e-06"
+        iyy="0.0016268429593"
+        iyz="-6.00160045996e-05"
+        izz="0.00252331596879" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_2.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_2_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="left_arm_2" type="revolute">
+    <origin xyz="0.059097 0.01042 0" rpy="0 0 0" />
+    <parent link="left_arm_1" />
+    <child link="left_arm_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="0.0" upper="2.2562" velocity="2.0" />
+  </joint>
+  <link name="left_arm_3">
+    <inertial>
+      <origin xyz="-0.00034904739879 -0.0598468761755 -0.00373414838581" rpy="0 0 0" />
+      <mass value="0.99388453141" />
+      <inertia
+        ixx="0.00161777944792"
+        ixy="-3.80298356452e-06"
+        ixz="-1.4908793381e-07"
+        iyy="0.000883765817272"
+        iyz="-9.93545379231e-05"
+        izz="0.00166465467945" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_3.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/arm_3_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="left_arm_3" type="revolute">
+    <origin xyz="0.01 -0.1365 0" rpy="0 0 0" />
+    <parent link="left_arm_2" />
+    <child link="left_arm_3" />
+    <axis xyz="0 1 0" />
+    <limit effort="87.0" lower="-1.4708" upper="1.4708" velocity="2.0" />
+  </joint>
+  <link name="left_arm_4">
+    <inertial>
+      <origin xyz="-0.000280129848979 -0.0648718053705 -0.0140793171035" rpy="0 0 0" />
+      <mass value="0.941536856695" />
+      <inertia
+        ixx="0.000965858160607"
+        ixy="-2.99859851215e-07"
+        ixz="-3.90201000769e-08"
+        iyy="0.000677994069648"
+        iyz="-2.75303236366e-07"
+        izz="0.00099151357007" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_4.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/arm_4_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="left_arm_4" type="revolute">
+    <origin xyz="0 -0.13 0.0135" rpy="0 0 0" />
+    <parent link="left_arm_3" />
+    <child link="left_arm_4" />
+    <axis xyz="-1 0 0" />
+    <limit effort="87.0" lower="0.0" upper="2.1689" velocity="2.0" />
+  </joint>
+  <link name="left_arm_5">
+    <inertial>
+      <origin xyz="0.0005592096588 -0.00619673546371 0.0591033457019" rpy="0 0 0" />
+      <mass value="0.278547004374" />
+      <inertia
+        ixx="0.00114985724046"
+        ixy="-1.20164234648e-05"
+        ixz="-8.94283341649e-06"
+        iyy="0.00119161985852"
+        iyz="0.000195799447664"
+        izz="0.000205028713265" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_5.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/arm_5_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="left_arm_5" type="revolute">
+    <origin xyz="0 -0.1026 -0.0135" rpy="1.5707963267949 0 0" />
+    <parent link="left_arm_4" />
+    <child link="left_arm_5" />
+    <axis xyz="0 0 -1" />
+    <limit effort="87.0" lower="-1.4708" upper="1.4708" velocity="2.0" />
+  </joint>
+  <link name="left_arm_6">
+    <inertial>
+      <origin xyz="-2.48928871141e-05 2.29482159259e-05 0.00553936088729" rpy="0 0 0" />
+      <mass value="0.0957235902093" />
+      <inertia
+        ixx="4.09643196683e-05"
+        ixy="-2.09954823837e-06"
+        ixz="1.36081685004e-08"
+        iyy="6.37215753949e-05"
+        iyz="-6.64847074172e-09"
+        izz="3.82092522652e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_6.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+  </link>
+  <joint name="left_arm_6" type="revolute">
+    <origin xyz="0 0 0.112" rpy="0 0 0" />
+    <parent link="left_arm_5" />
+    <child link="left_arm_6" />
+    <axis xyz="0 1 0" />
+    <limit effort="87.0" lower="-0.9" upper="0.9" velocity="2.0" />
+  </joint>
+  <!-- Link left_arm_7 -->
+  <link name="left_arm_7">
+    <inertial>
+      <origin xyz="-0.001668048688 0.04950842654 -0.01042841772" rpy="0 0 0" />
+      <mass value="0.134554857936" />
+      <inertia
+        ixx="0.000148895056459"
+        ixy="1.05107088032e-05"
+        ixz="1.70369593221e-06"
+        iyy="6.23181062349e-05"
+        iyz="3.88597431285e-06"
+        izz="0.000173350096838" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_7.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_7_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_7_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_arm_7_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="left_arm_7" type="revolute">
+    <origin xyz="-0.0105 0 0.04" rpy="1.57079632679  0 -1.57079632679 " />
+    <parent link="left_arm_6" />
+    <child link="left_arm_7" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="-0.698132" upper="0.698132" velocity="2.0" />
+  </joint>
+  <link name="left_arm_ee">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="left_arm_ee" type="fixed">
+    <parent link="left_arm_7" />
+    <child link="left_arm_ee" />
+    <origin xyz="0 0 0" rpy="0 -1.570796327 1.570796327" />
+  </joint>
+  <link name="left_finger_1_1">
+    <inertial>
+      <origin xyz="0.000440429 -0.0155435 -0.0164063" rpy="0 0 0" />
+      <mass value="0.0231865672398" />
+      <inertia
+        ixx="4.34890420301e-06"
+        ixy="3.19563884915e-07"
+        ixz="-4.18665507733e-08"
+        iyy="3.08588532624e-06"
+        iyz="5.72598471063e-07"
+        izz="2.82391657759e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_1_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_1_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_1_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_1_2">
+    <inertial>
+      <origin xyz="0.0029976 0.0040093 0.0104716" rpy="0 0 0" />
+      <mass value="0.00931510659379" />
+      <inertia
+        ixx="4.29958806649e-07"
+        ixy="-1.30884448239e-07"
+        ixz="2.04022632329e-07"
+        iyy="1.01595232769e-06"
+        iyz="6.79601962142e-08"
+        izz="9.22396189492e-07" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="left_finger_1_3">
+    <inertial>
+      <origin xyz="0.000537016 0.0143503 0.00579382" rpy="0 0 0" />
+      <mass value="0.0208114646671" />
+      <inertia
+        ixx="2.55090916261e-06"
+        ixy="8.46517057753e-08"
+        ixz="-6.37875252827e-09"
+        iyy="1.26663328298e-06"
+        iyz="7.69802455881e-08"
+        izz="2.56877473482e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_1_4">
+    <inertial>
+      <origin xyz="-0.00457387 -0.0128702 0.00898084" rpy="0 0 0" />
+      <mass value="0.0178566256528" />
+      <inertia
+        ixx="2.09446994429e-06"
+        ixy="8.51745972145e-08"
+        ixz="1.54574362147e-09"
+        iyy="8.31292782396e-07"
+        iyz="3.90786681465e-09"
+        izz="1.98402822521e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_1_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_finger_1_4" type="revolute">
+    <origin xyz="0.009 0.032 0.001" rpy="3.14159265359 1.57079632679  0" />
+    <parent link="left_finger_1_3" />
+    <child link="left_finger_1_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_1_3" type="revolute">
+    <origin xyz="-0.009 -0.003 0.0136" rpy="-1.57079632679  1.57079632679  0" />
+    <parent link="left_finger_1_2" />
+    <child link="left_finger_1_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0.523599" upper="0.523599" />
+  </joint>
+
+  <joint name="left_finger_1_2" type="revolute">
+    <origin xyz="0.0161998 -0.0322315 -0.00798383" rpy="-0.785398 1.0472 1.91986" />
+    <parent link="left_finger_1_1" />
+    <child link="left_finger_1_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_1_1" type="revolute">
+    <origin xyz="-0.0369615 0.0693706 0.0025" rpy="-1.0471975512 -1.57079632679  0" />
+    <parent link="left_arm_7" />
+    <child link="left_finger_1_1" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0.349066" upper="1.91986" />
+  </joint>
+
+  <link name="left_finger_2_1">
+    <inertial>
+      <origin xyz="0.000123479 -0.0046052 -0.00925609" rpy="0 0 0" />
+      <mass value="0.0114818371344" />
+      <inertia
+        ixx="1.07662232438e-06"
+        ixy="-3.55578566137e-08"
+        ixz="2.76241936912e-08"
+        iyy="4.56475004529e-07"
+        iyz="2.53475031688e-08"
+        izz="1.09622490368e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="left_finger_2_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 0.00739331" rpy="0 0 0" />
+      <mass value="0.0300233831293" />
+      <inertia
+        ixx="5.57580654553e-06"
+        ixy="1.21864123587e-07"
+        ixz="-8.92712912903e-10"
+        iyy="1.52646036519e-06"
+        iyz="-2.27173551008e-08"
+        izz="5.54377789644e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_2_3">
+    <inertial>
+      <origin xyz="-0.00466142 -0.0130844 0.00659487" rpy="0 0 0" />
+      <mass value="0.0170467564168" />
+      <inertia
+        ixx="1.77655084818e-06"
+        ixy="9.90866201419e-08"
+        ixz="4.03061348098e-10"
+        iyy="7.67463965344e-07"
+        iyz="-8.49067512707e-08"
+        izz="1.75662068751e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_2_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 0.00802314" rpy="0 0 0" />
+      <mass value="0.0128308392389" />
+      <inertia
+        ixx="1.07736557623e-06"
+        ixy="6.54338281265e-08"
+        ixz="-1.63637905518e-09"
+        iyy="4.98643535776e-07"
+        iyz="-5.21316846323e-09"
+        izz="1.05558829708e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_finger_2_4" type="revolute">
+    <origin xyz="-3.03577e-18 -0.03 -0.00125" rpy="7.02369e-18 -2.50257e-28 -1.21008e-18" />
+    <parent link="left_finger_2_3" />
+    <child link="left_finger_2_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_2_3" type="revolute">
+    <origin xyz="3.78603e-16 -0.044 0.00075" rpy="8.89198e-18 -2.46985e-33 8.60751e-15" />
+    <parent link="left_finger_2_2" />
+    <child link="left_finger_2_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="left_finger_2_2" type="revolute">
+    <origin xyz="-0.0075 0.0095 -0.0025" rpy="3.14159265359 -1.57079632679  0" />
+    <parent link="left_finger_2_1" />
+    <child link="left_finger_2_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_2_1" type="revolute">
+    <origin xyz="-0.0359242 0.0975 0.001" rpy="-8.46289e-18 2.9553e-19 0.0698132" />
+    <parent link="left_arm_7" />
+    <child link="left_finger_2_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="left_finger_3_1">
+    <inertial>
+      <origin xyz="0.000123479 -0.0046052 -0.00925609" rpy="0 0 0" />
+      <mass value="0.0114818371344" />
+      <inertia
+        ixx="1.07662232438e-06"
+        ixy="-3.55578566137e-08"
+        ixz="2.76241936912e-08"
+        iyy="4.56475004529e-07"
+        iyz="2.53475031688e-08"
+        izz="1.09622490368e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="left_finger_3_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 0.00739331" rpy="0 0 0" />
+      <mass value="0.0300233831293" />
+      <inertia
+        ixx="5.57580654553e-06"
+        ixy="1.21864123587e-07"
+        ixz="-8.92712912903e-10"
+        iyy="1.52646036519e-06"
+        iyz="-2.27173551008e-08"
+        izz="5.54377789644e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_3_3">
+    <inertial>
+      <origin xyz="-0.00466142 -0.0130844 0.00659487" rpy="0 0 0" />
+      <mass value="0.0170467564168" />
+      <inertia
+        ixx="1.77655084818e-06"
+        ixy="9.90866201419e-08"
+        ixz="4.03061348098e-10"
+        iyy="7.67463965344e-07"
+        iyz="-8.49067512707e-08"
+        izz="1.75662068751e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_3_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 0.00802314" rpy="0 0 0" />
+      <mass value="0.0128308392389" />
+      <inertia
+        ixx="1.07736557623e-06"
+        ixy="6.54338281265e-08"
+        ixz="-1.63637905518e-09"
+        iyy="4.98643535776e-07"
+        iyz="-5.21316846323e-09"
+        izz="1.05558829708e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_finger_3_4" type="revolute">
+    <origin xyz="-3.46945e-18 -0.03 -0.00125" rpy="5.67791e-29 -6.12323e-17 -3.69157e-30" />
+    <parent link="left_finger_3_3" />
+    <child link="left_finger_3_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_3_3" type="revolute">
+    <origin xyz="5.14996e-16 -0.044 0.00075" rpy="-3.15734e-29 6.12323e-17 8.29002e-15" />
+    <parent link="left_finger_3_2" />
+    <child link="left_finger_3_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="left_finger_3_2" type="revolute">
+    <origin xyz="-0.0075 0.0095 -0.0025" rpy="3.14159265359 -1.57079632679  0" />
+    <parent link="left_finger_3_1" />
+    <child link="left_finger_3_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_3_1" type="revolute">
+    <origin xyz="-0.0149242 0.1 0.001" rpy="0 -4.68887e-16 0" />
+    <parent link="left_arm_7" />
+    <child link="left_finger_3_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="left_finger_4_1">
+    <inertial>
+      <origin xyz="0.000123479 -0.0046052 -0.00925609" rpy="0 0 0" />
+      <mass value="0.0114818371344" />
+      <inertia
+        ixx="1.07662232438e-06"
+        ixy="-3.55578566137e-08"
+        ixz="2.76241936912e-08"
+        iyy="4.56475004529e-07"
+        iyz="2.53475031688e-08"
+        izz="1.09622490368e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="left_finger_4_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 0.00739331" rpy="0 0 0" />
+      <mass value="0.0300233831293" />
+      <inertia
+        ixx="5.57580654553e-06"
+        ixy="1.21864123587e-07"
+        ixz="-8.92712912903e-10"
+        iyy="1.52646036519e-06"
+        iyz="-2.27173551008e-08"
+        izz="5.54377789644e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_4_3">
+    <inertial>
+      <origin xyz="-0.00466142 -0.0130844 0.00659487" rpy="0 0 0" />
+      <mass value="0.0170467564168" />
+      <inertia
+        ixx="1.77655084818e-06"
+        ixy="9.90866201419e-08"
+        ixz="4.03061348098e-10"
+        iyy="7.67463965344e-07"
+        iyz="-8.49067512707e-08"
+        izz="1.75662068751e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_4_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 0.00802314" rpy="0 0 0" />
+      <mass value="0.0128308392389" />
+      <inertia
+        ixx="1.07736557623e-06"
+        ixy="6.54338281265e-08"
+        ixz="-1.63637905518e-09"
+        iyy="4.98643535776e-07"
+        iyz="-5.21316846323e-09"
+        izz="1.05558829708e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_finger_4_4" type="revolute">
+    <origin xyz="-4.77049e-18 -0.03 -0.00125" rpy="1.18957e-17 -6.12323e-17 4.51942e-18" />
+    <parent link="left_finger_4_3" />
+    <child link="left_finger_4_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_4_3" type="revolute">
+    <origin xyz="3.46511e-16 -0.044 0.00075" rpy="1.60638e-17 1.31174e-16 7.86537e-15" />
+    <parent link="left_finger_4_2" />
+    <child link="left_finger_4_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="left_finger_4_2" type="revolute">
+    <origin xyz="-0.0075 0.0095 -0.0025" rpy="3.14159265359 -1.57079632679  0" />
+    <parent link="left_finger_4_1" />
+    <child link="left_finger_4_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_4_1" type="revolute">
+    <origin xyz="0.0060758 0.096 0.001" rpy="8.46289e-18 2.9553e-19 -0.0698132" />
+    <parent link="left_arm_7" />
+    <child link="left_finger_4_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="left_finger_5_1">
+    <inertial>
+      <origin xyz="0.000123479 -0.0046052 -0.00925609" rpy="0 0 0" />
+      <mass value="0.0114818371344" />
+      <inertia
+        ixx="1.07662232438e-06"
+        ixy="-3.55578566137e-08"
+        ixz="2.76241936912e-08"
+        iyy="4.56475004529e-07"
+        iyz="2.53475031688e-08"
+        izz="1.09622490368e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="left_finger_5_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 0.00739331" rpy="0 0 0" />
+      <mass value="0.0300233831293" />
+      <inertia
+        ixx="5.57580654553e-06"
+        ixy="1.21864123587e-07"
+        ixz="-8.92712912903e-10"
+        iyy="1.52646036519e-06"
+        iyz="-2.27173551008e-08"
+        izz="5.54377789644e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_5_3">
+    <inertial>
+      <origin xyz="-0.00466142 -0.0130844 0.00659487" rpy="0 0 0" />
+      <mass value="0.0170467564168" />
+      <inertia
+        ixx="1.77655084818e-06"
+        ixy="9.90866201419e-08"
+        ixz="4.03061348098e-10"
+        iyy="7.67463965344e-07"
+        iyz="-8.49067512707e-08"
+        izz="1.75662068751e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="left_finger_5_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 0.00802314" rpy="0 0 0" />
+      <mass value="0.0128308392389" />
+      <inertia
+        ixx="1.07736557623e-06"
+        ixy="6.54338281265e-08"
+        ixz="-1.63637905518e-09"
+        iyy="4.98643535776e-07"
+        iyz="-5.21316846323e-09"
+        izz="1.05558829708e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/left_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_finger_5_4" type="revolute">
+    <origin xyz="-2.81893e-18 -0.03 -0.00125" rpy="3.56166e-18 1.01337e-30 1.57048e-18" />
+    <parent link="left_finger_5_3" />
+    <child link="left_finger_5_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_5_3" type="revolute">
+    <origin xyz="3.35018e-16 -0.044 0.00075" rpy="4.17142e-17 3.25259e-28 7.58904e-15" />
+    <parent link="left_finger_5_2" />
+    <child link="left_finger_5_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="left_finger_5_2" type="revolute">
+    <origin xyz="-0.0075 0.0095 -0.0025" rpy="3.14159265359 -1.57079632679  0" />
+    <parent link="left_finger_5_1" />
+    <child link="left_finger_5_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="left_finger_5_1" type="revolute">
+    <origin xyz="0.0270758 0.092 0.001" rpy="1.68845e-17 1.18068e-18 -0.139626" />
+    <parent link="left_arm_7" />
+    <child link="left_finger_5_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="right_arm_1">
+    <inertial>
+      <origin xyz="-0.0552609826772 0.00925355984792 -0.00581387019475" rpy="0 0 0" />
+      <mass value="1.28725335786" />
+      <inertia
+        ixx="0.00133842926825"
+        ixy="4.03501167217e-05"
+        ixz="-2.84135675341e-05"
+        iyy="0.00155772765556"
+        iyz="4.98815657256e-06"
+        izz="0.00166919237534" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material></visual>
+  </link>
+  <joint name="right_arm_1" type="revolute">
+    <origin xyz="-0.16218 0.22943 0" rpy="0 0 0" />
+    <parent link="waist_5" />
+    <child link="right_arm_1" />
+    <axis xyz="-0.984807753012208 0.173648177666932 0" />
+    <limit effort="87.0" lower="-0.4236" upper="2.5180" velocity="2.0" />
+  </joint>
+  <link name="right_arm_2">
+    <inertial>
+      <origin xyz="-0.00877752761406 -0.087919924198 -0.000375265504091" rpy="0 0 0" />
+      <mass value="1.26141450464" />
+      <inertia
+        ixx="0.00276838657111"
+        ixy="-8.61678355054e-05"
+        ixz="-9.30998251518e-06"
+        iyy="0.00162706080188"
+        iyz="-6.02834640406e-05"
+        izz="0.0025239339917" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_2.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_2_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_arm_2" type="revolute">
+    <origin xyz="-0.059097 0.01042 0" rpy="0 0 0" />
+    <parent link="right_arm_1" />
+    <child link="right_arm_2" />
+    <axis xyz="0 0 -1" />
+    <limit effort="87.0" lower="0.0" upper="2.2562" velocity="2.0" />
+  </joint>
+  <link name="right_arm_3">
+    <inertial>
+      <origin xyz="0.000111564170415 -0.0596081364427 -0.00324013950239" rpy="0 0 0" />
+      <mass value="0.951534828248" />
+      <inertia
+        ixx="0.00161814300296"
+        ixy="3.82377726256e-06"
+        ixz="7.73903574914e-07"
+        iyy="0.000884011095777"
+        iyz="-9.96629374532e-05"
+        izz="0.00164497486805" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_3.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/arm_3_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_arm_3" type="revolute">
+    <origin xyz="-0.01 -0.1365 0" rpy="0 0 0" />
+    <parent link="right_arm_2" />
+    <child link="right_arm_3" />
+    <axis xyz="0 -1 0" />
+    <limit effort="87.0" lower="-1.4708" upper="1.4708" velocity="2.0" />
+  </joint>
+  <link name="right_arm_4">
+    <inertial>
+      <origin xyz="0.000102475056552 -0.064841956299 -0.0136765099692" rpy="0 0 0" />
+      <mass value="0.891687298837" />
+      <inertia
+        ixx="0.000966043768638"
+        ixy="2.78881815731e-07"
+        ixz="-8.87113175841e-09"
+        iyy="0.000678094214421"
+        iyz="-3.22329147873e-07"
+        izz="0.000991730717457" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_4.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/arm_4_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_arm_4" type="revolute">
+    <origin xyz="0 -0.13 0.0135" rpy="0 0 0" />
+    <parent link="right_arm_3" />
+    <child link="right_arm_4" />
+    <axis xyz="-1 0 0" />
+    <limit effort="87.0" lower="0.0" upper="2.1689" velocity="2.0" />
+  </joint>
+  <link name="right_arm_5">
+    <inertial>
+      <origin xyz="-0.000478462324106 -0.00451587242151 0.0448134720082" rpy="0 0 0" />
+      <mass value="0.244234311" />
+      <inertia
+        ixx="0.00078278758091"
+        ixy="-1.84344846384e-05"
+        ixz="5.18049756041e-06"
+        iyy="0.000813382433482"
+        iyz="0.000133390355001"
+        izz="0.000216305670277" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_5.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/arm_5_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_arm_5" type="revolute">
+    <origin xyz="0 -0.1026 -0.0135" rpy="1.5707963267949 0 0" />
+    <parent link="right_arm_4" />
+    <child link="right_arm_5" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="-1.4708" upper="1.4708" velocity="2.0" />
+  </joint>
+  <link name="right_arm_6">
+    <inertial>
+      <origin xyz="-2.48928871179e-05 2.2948215929e-05 0.00553936088729" rpy="0 0 0" />
+      <mass value="0.0961096745345" />
+      <inertia
+        ixx="4.11295420725e-05"
+        ixy="-2.10801639824e-06"
+        ixz="1.36630546632e-08"
+        iyy="6.39785852018e-05"
+        iyz="-6.67528618322e-09"
+        izz="3.83633625879e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_6.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+  </link>
+  <joint name="right_arm_6" type="revolute">
+    <origin xyz="0 0 0.112" rpy="0 0 0" />
+    <parent link="right_arm_5" />
+    <child link="right_arm_6" />
+    <axis xyz="0 -1 0" />
+    <limit effort="87.0" lower="-0.9" upper="0.9" velocity="2.0" />
+  </joint>
+  <!-- Link right_arm_7 -->
+  <link name="right_arm_7">
+    <inertial>
+      <origin xyz="0.001668378153 -0.04950856214 0.01042896476" rpy="0 0 0" />
+      <mass value="0.135097561374" />
+      <inertia
+        ixx="0.000149497351217"
+        ixy="1.05539093079e-05"
+        ixz="3.36247900317e-07"
+        iyy="6.25685856658e-05"
+        iyz="3.90289946246e-06"
+        izz="0.000174050165627" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_7.obj"/>
+      </geometry>
+      <material asset="polyurethane_black"></material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_7_tactile.obj"/>
+      </geometry>
+      <material asset="polyurethane_white"></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_7_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_arm_7_tactile.npz" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_arm_7" type="revolute">
+    <origin xyz="0.0105 0 0.04" rpy="-1.57079632679  0 1.57079632679 " />
+    <parent link="right_arm_6" />
+    <child link="right_arm_7" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="-0.698132" upper="0.698132" velocity="2.0" />
+  </joint>
+  <link name="right_arm_ee">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="right_arm_ee" type="fixed">
+    <parent link="right_arm_7" />
+    <child link="right_arm_ee" />
+    <origin xyz="0 0 0" rpy="0 1.570796327 -1.570796327" />
+  </joint>
+  <link name="right_finger_1_1">
+    <inertial>
+      <origin xyz="0.000351648 -0.0152943 0.016669" rpy="0 0 0" />
+      <mass value="0.0228194843438" />
+      <inertia
+        ixx="4.19490406843e-06"
+        ixy="2.76694159296e-07"
+        ixz="3.48774963282e-08"
+        iyy="2.94768601585e-06"
+        iyz="-5.06890057282e-07"
+        izz="2.69349128272e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_1_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_1_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_1_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_1_2">
+    <inertial>
+      <origin xyz="-0.0040093 0.0029976 -0.0104716" rpy="0 0 0" />
+      <mass value="0.00935266362429" />
+      <inertia
+        ixx="1.02004999335e-06"
+        ixy="1.31412485917e-07"
+        ixz="6.82343017553e-08"
+        iyy="4.31692970144e-07"
+        iyz="-2.04845521861e-07"
+        izz="9.26116512869e-07" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="right_finger_1_3">
+    <inertial>
+      <origin xyz="0.000549125 0.0146737 -0.00576213" rpy="0 0 0" />
+      <mass value="0.0204348022111" />
+      <inertia
+        ixx="2.42960912392e-06"
+        ixy="8.86219796846e-08"
+        ixz="6.75970874928e-09"
+        iyy="1.23699166884e-06"
+        iyz="-6.77866901751e-08"
+        izz="2.47688541956e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_1_4">
+    <inertial>
+      <origin xyz="-0.00457397 -0.0128702 -0.00898084" rpy="0 0 0" />
+      <mass value="0.0179287854173" />
+      <inertia
+        ixx="2.10294526062e-06"
+        ixy="8.55215888846e-08"
+        ixz="-1.55378845378e-09"
+        iyy="8.34648420035e-07"
+        iyz="-3.93287371425e-09"
+        izz="1.99205809423e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_1_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_finger_1_4" type="revolute">
+    <origin xyz="0.009 0.032 -0.001" rpy="-3.14159265359 -1.57079632679  0" />
+    <parent link="right_finger_1_3" />
+    <child link="right_finger_1_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-3.37508e-14" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_1_3" type="revolute">
+    <origin xyz="0.003 -0.009 -0.0136" rpy="3.14159265359 -1.57079632679  0" />
+    <parent link="right_finger_1_2" />
+    <child link="right_finger_1_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0.523599" upper="0.523599" />
+  </joint>
+
+  <joint name="right_finger_1_2" type="revolute">
+    <origin xyz="0.0161998 -0.0322315 0.00798383" rpy="1.1832 0.361367 1.06279" />
+    <parent link="right_finger_1_1" />
+    <child link="right_finger_1_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_1_1" type="revolute">
+    <origin xyz="0.0369615 -0.0693706 -0.0025" rpy="-2.09439510239 1.57079632679  0" />
+    <parent link="right_arm_7" />
+    <child link="right_finger_1_1" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0.349066" upper="1.91986" />
+  </joint>
+
+  <link name="right_finger_2_1">
+    <inertial>
+      <origin xyz="-0.000701763 0.0046052 0.0092583" rpy="0 0 0" />
+      <mass value="0.0115281471123" />
+      <inertia
+        ixx="1.08093567103e-06"
+        ixy="-2.53257775263e-08"
+        ixz="2.81756219248e-08"
+        iyy="4.5306611216e-07"
+        iyz="2.51126818003e-08"
+        izz="1.09542535123e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="right_finger_2_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 -0.00760669" rpy="0 0 0" />
+      <mass value="0.0301444771834" />
+      <inertia
+        ixx="5.59829558405e-06"
+        ixy="1.22355641172e-07"
+        ixz="-8.96313513986e-10"
+        iyy="1.53261707555e-06"
+        iyz="-2.28089815713e-08"
+        izz="5.56613775302e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_2_3">
+    <inertial>
+      <origin xyz="-0.00466142 -0.0130844 -0.00690513" rpy="0 0 0" />
+      <mass value="0.0171155115213" />
+      <inertia
+        ixx="1.78371625468e-06"
+        ixy="9.94862686589e-08"
+        ixz="4.04687025408e-10"
+        iyy="7.70559396748e-07"
+        iyz="-8.52492077717e-08"
+        izz="1.7637057092e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_2_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 -0.00797686" rpy="0 0 0" />
+      <mass value="0.0128825901803" />
+      <inertia
+        ixx="1.08171094147e-06"
+        ixy="6.56977440047e-08"
+        ixz="-1.64297910332e-09"
+        iyy="5.00654727088e-07"
+        iyz="-5.2341948646e-09"
+        izz="1.05984582748e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_finger_2_4" type="revolute">
+    <origin xyz="-7.67615e-17 -0.03 0.00125" rpy="3.26356e-15 -1.12595e-17 3.81343e-17" />
+    <parent link="right_finger_2_3" />
+    <child link="right_finger_2_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_2_3" type="revolute">
+    <origin xyz="-2.1684e-19 -0.044 -0.00075" rpy="1.3561e-17 3.83405e-32 2.92343e-33" />
+    <parent link="right_finger_2_2" />
+    <child link="right_finger_2_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="right_finger_2_2" type="revolute">
+    <origin xyz="0.0075 -0.0095 0.0025" rpy="6.35724e-17 1.57079632679  0" />
+    <parent link="right_finger_2_1" />
+    <child link="right_finger_2_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_2_1" type="revolute">
+    <origin xyz="0.0359242 -0.0975 -0.001" rpy="3.44345e-33 9.86076e-32 0.0698132" />
+    <parent link="right_arm_7" />
+    <child link="right_finger_2_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="right_finger_3_1">
+    <inertial>
+      <origin xyz="-0.000701763 0.0046052 0.0092583" rpy="0 0 0" />
+      <mass value="0.0115281471123" />
+      <inertia
+        ixx="1.08093567103e-06"
+        ixy="-2.53257775263e-08"
+        ixz="2.81756219248e-08"
+        iyy="4.5306611216e-07"
+        iyz="2.51126818003e-08"
+        izz="1.09542535123e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="right_finger_3_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 -0.00760669" rpy="0 0 0" />
+      <mass value="0.0301444771834" />
+      <inertia
+        ixx="5.59829558405e-06"
+        ixy="1.22355641172e-07"
+        ixz="-8.96313513986e-10"
+        iyy="1.53261707555e-06"
+        iyz="-2.28089815713e-08"
+        izz="5.56613775302e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_3_3">
+    <inertial>
+      <origin xyz="-0.0046763 -0.0130844 -0.00690513" rpy="0 0 0" />
+      <mass value="0.0171155115213" />
+      <inertia
+        ixx="1.78371625468e-06"
+        ixy="9.898973627e-08"
+        ixz="4.443142624e-10"
+        iyy="7.67076898501e-07"
+        iyz="-8.52492077717e-08"
+        izz="1.76022321095e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_3_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 -0.00797686" rpy="0 0 0" />
+      <mass value="0.0128825901803" />
+      <inertia
+        ixx="1.08171094147e-06"
+        ixy="6.56977440047e-08"
+        ixz="-1.64297910332e-09"
+        iyy="5.00654727088e-07"
+        iyz="-5.2341948646e-09"
+        izz="1.05984582748e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_finger_3_4" type="revolute">
+    <origin xyz="1.33769e-15 -0.03 0.00125" rpy="1.65266e-28 -1.46727e-15 1.26482e-15" />
+    <parent link="right_finger_3_3" />
+    <child link="right_finger_3_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_3_3" type="revolute">
+    <origin xyz="-2.1684e-19 -0.044 -0.00075" rpy="-1.16357e-28 -1.82424e-30 -1.61421e-31" />
+    <parent link="right_finger_3_2" />
+    <child link="right_finger_3_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="right_finger_3_2" type="revolute">
+    <origin xyz="0.0075 -0.0095 0.0025" rpy="2.66107e-15 1.57079632679  0" />
+    <parent link="right_finger_3_1" />
+    <child link="right_finger_3_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_3_1" type="revolute">
+    <origin xyz="0.0149242 -0.1 -0.001" rpy="0 -1.46389e-60 0" />
+    <parent link="right_arm_7" />
+    <child link="right_finger_3_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="right_finger_4_1">
+    <inertial>
+      <origin xyz="-0.000701763 0.0046052 0.0092583" rpy="0 0 0" />
+      <mass value="0.0115281471123" />
+      <inertia
+        ixx="1.08093567103e-06"
+        ixy="-2.53257775263e-08"
+        ixz="2.81756219248e-08"
+        iyy="4.5306611216e-07"
+        iyz="2.51126818003e-08"
+        izz="1.09542535123e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="right_finger_4_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 -0.00760669" rpy="0 0 0" />
+      <mass value="0.0301444771834" />
+      <inertia
+        ixx="5.59829558405e-06"
+        ixy="1.22355641172e-07"
+        ixz="-8.96313513986e-10"
+        iyy="1.53261707555e-06"
+        iyz="-2.28089815713e-08"
+        izz="5.56613775302e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_4_3">
+    <inertial>
+      <origin xyz="-0.00466142 -0.0130844 -0.00690513" rpy="0 0 0" />
+      <mass value="0.0171155115213" />
+      <inertia
+        ixx="1.78371625468e-06"
+        ixy="9.94862686589e-08"
+        ixz="4.04687025408e-10"
+        iyy="7.70559396748e-07"
+        iyz="-8.52492077717e-08"
+        izz="1.7637057092e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_4_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 -0.00797686" rpy="0 0 0" />
+      <mass value="0.0128825901803" />
+      <inertia
+        ixx="1.08171094147e-06"
+        ixy="6.56977440047e-08"
+        ixz="-1.64297910332e-09"
+        iyy="5.00654727088e-07"
+        iyz="-5.2341948646e-09"
+        izz="1.05984582748e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_finger_4_4" type="revolute">
+    <origin xyz="1.86049e-16 -0.03 0.00125" rpy="5.84896e-16 1.88727e-16 1.03068e-16" />
+    <parent link="right_finger_4_3" />
+    <child link="right_finger_4_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_4_3" type="revolute">
+    <origin xyz="0 -0.044 -0.00075" rpy="-2.13169e-18 3.28219e-31 3.13804e-30" />
+    <parent link="right_finger_4_2" />
+    <child link="right_finger_4_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="right_finger_4_2" type="revolute">
+    <origin xyz="0.0075 -0.0095 0.0025" rpy="7.79288e-16 1.57079632679  0" />
+    <parent link="right_finger_4_1" />
+    <child link="right_finger_4_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_4_1" type="revolute">
+    <origin xyz="-0.0060758 -0.096 -0.001" rpy="-1.38778e-17 -4.84623e-19 -0.0698132" />
+    <parent link="right_arm_7" />
+    <child link="right_finger_4_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="right_finger_5_1">
+    <inertial>
+      <origin xyz="-0.000701763 0.0046052 0.0092583" rpy="0 0 0" />
+      <mass value="0.0115281471123" />
+      <inertia
+        ixx="1.08093567103e-06"
+        ixy="-2.53257775263e-08"
+        ixz="2.81756219248e-08"
+        iyy="4.5306611216e-07"
+        iyz="2.51126818003e-08"
+        izz="1.09542535123e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_1.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+  </link>
+
+  <link name="right_finger_5_2">
+    <inertial>
+      <origin xyz="-0.00513853 -0.0200915 -0.00760669" rpy="0 0 0" />
+      <mass value="0.0301444771834" />
+      <inertia
+        ixx="5.59829558405e-06"
+        ixy="1.22355641172e-07"
+        ixz="-8.96313513986e-10"
+        iyy="1.53261707555e-06"
+        iyz="-2.28089815713e-08"
+        izz="5.56613775302e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_2_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_5_3">
+    <inertial>
+      <origin xyz="-0.00466142 -0.0130844 -0.00690513" rpy="0 0 0" />
+      <mass value="0.0171155115213" />
+      <inertia
+        ixx="1.78371625468e-06"
+        ixy="9.94862686589e-08"
+        ixz="4.04687025408e-10"
+        iyy="7.70559396748e-07"
+        iyz="-8.52492077717e-08"
+        izz="1.7637057092e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_3_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="right_finger_5_4">
+    <inertial>
+      <origin xyz="-0.00394771 -0.0110737 -0.00797686" rpy="0 0 0" />
+      <mass value="0.0128825901803" />
+      <inertia
+        ixx="1.08171094147e-06"
+        ixy="6.56977440047e-08"
+        ixz="-1.64297910332e-09"
+        iyy="5.00654727088e-07"
+        iyz="-5.2341948646e-09"
+        izz="1.05984582748e-06" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4.obj" />
+      </geometry>
+      <material asset="polyurethane_black" />
+    </visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.obj" />
+      </geometry>
+      <material asset="polyurethane_white" />
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_collision.obj" />
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <tet filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/right_finger_2_4_tactile.npz"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_finger_5_4" type="revolute">
+    <origin xyz="9.59085e-16 -0.03 0.00125" rpy="-5.23902e-17 2.63475e-16 9.4539e-18" />
+    <parent link="right_finger_5_3" />
+    <child link="right_finger_5_4" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_5_3" type="revolute">
+    <origin xyz="-6.50521e-19 -0.044 -0.00075" rpy="3.03363e-17 1.93132e-31 -2.73155e-32" />
+    <parent link="right_finger_5_2" />
+    <child link="right_finger_5_3" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="0" upper="1.91986" />
+  </joint>
+
+  <joint name="right_finger_5_2" type="revolute">
+    <origin xyz="0.0075 -0.0095 0.0025" rpy="-4.27957e-16 1.57079632679  0" />
+    <parent link="right_finger_5_1" />
+    <child link="right_finger_5_2" />
+    <axis xyz="0 0 1" />
+    <limit effort="10" velocity="10" lower="-0" upper="1.57079632679 " />
+  </joint>
+
+  <joint name="right_finger_5_1" type="revolute">
+    <origin xyz="-0.0270758 -0.092 -0.001" rpy="1.0343e-32 -1.47911e-31 -0.139626" />
+    <parent link="right_arm_7" />
+    <child link="right_finger_5_1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-0.261799" upper="0.261799" />
+  </joint>
+
+  <link name="head_1">
+    <inertial>
+      <origin xyz="-0.00101143 0.08720466 -0.00042430" rpy="0 0 0" />
+      <mass value="0.65462515" />
+      <inertia ixx="0.00180530" ixy="-0.00007235" ixz="-0.00000082" iyy="0.00069534" iyz="0.00000477" izz="0.00197848" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/neck.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material>
+    </visual>
+  </link>
+  <joint name="head_1" type="revolute">
+    <origin xyz="0 0.310000000000001 0" rpy="0 0 0" />
+    <parent link="waist_5" />
+    <child link="head_1" />
+    <axis xyz="1 0 0" />
+    <limit effort="87.0" lower="-0.5109" upper="0.8599" velocity="2.0" />
+  </joint>
+  <link name="head_2">
+    <inertial>
+      <origin xyz="-0.00007798 0.11698085 0.03537265" rpy="0 0 0" />
+      <mass value="0.85754045" />
+      <inertia ixx="0.00577975" ixy="0.00000420" ixz="-0.00000509" iyy="0.00507686" iyz="0.00074610" izz="0.00537258" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/head.obj" />
+      </geometry>
+      <material asset="polyurethane_black"></material></visual>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/head_back.obj" />
+      </geometry>
+      <material asset="polyurethane_white"></material></visual>
+    <visual>
+      <origin xyz="0 0.098495703427300 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/head_eye.obj" />
+      </geometry>
+      <material asset="polyurethane_green"></material></visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://holiday_robot_descriptions/assets/friday_gen1_mk3/head_collision.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="head_2" type="revolute">
+    <origin xyz="0 0.0379864298614376 0" rpy="0 0 0" />
+    <parent link="head_1" />
+    <child link="head_2" />
+    <axis xyz="0 1 0" />
+    <limit effort="87.0" lower="-1.4708" upper="1.4708" velocity="2.0" />
+  </joint>
+  <link name="head_camera">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="head_camera" type="fixed">
+    <parent link="head_2"/>
+    <child link="head_camera"/>
+    <!-- <origin xyz="0.000358988153587554 0.17 0.10" rpy="1.570796327 0 3.141592653592654" /> -->
+    <origin xyz="0.0 0.04458 0.09148" rpy="1.308996939 0.0 3.141592653592654" />
+  </joint>
+  <link name="camera_rgb">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="camera_rgb" type="fixed">
+    <parent link="head_camera" />
+    <child link="camera_rgb" />
+    <origin xyz="-0.0475 0 0" rpy="-1.570796327 0 0" />
+    <!-- <parent link="head_2" /> -->
+    <!-- <origin xyz="0.032412 0.178778 0.103996" rpy="0.017370 -0.003248 -3.103389"/> -->
+  </joint>
+
+  <link name="stereo_cam_left">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="stereo_cam_left" type="fixed">
+    <parent link="head_2" />
+    <child link="stereo_cam_left" />
+    <origin xyz="0.03 0.04239 0.09705" rpy="-0.261799 0.0 -3.1415927" />
+  </joint>
+  <link name="stereo_cam_right">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="stereo_cam_right" type="fixed">
+    <parent link="head_2" />
+    <child link="stereo_cam_right" />
+    <origin xyz="-0.03 0.04239 0.09705" rpy="-0.261799 0.0 -3.1415927" />
+  </joint>
+
+  <link name="front_lidar">
+      <inertial>
+        <mass value="0.1"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        <friction value="0.0"/>
+      </inertial>
+      <visual>
+        <!-- <origin xyz="0.0 0.0 0.0"  rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://holiday_robot_descriptions/assets/object/visual/lakibeam1.obj" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material asset="plastic_shiny_black"/> -->
+      </visual>
+      <collision>
+        <!-- <origin xyz="0.0 0.0 0.0"  rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://holiday_robot_descriptions/assets/object/visual/lakibeam1.obj" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <surface asset="silicon"/> -->
+      </collision>
+  </link>
+  <joint name="front_lidar" type="fixed">
+    <parent link="BASE" />
+    <child link="front_lidar" />
+    <origin xyz="-0.022 -0.248 0.13" rpy="0 0 -1.57079632679 " />
+  </joint>
+
+  <link name="rear_lidar">
+      <inertial>
+        <mass value="0.1"/>
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+        <friction value="0.0"/>
+      </inertial>
+      <visual>
+        <!-- <origin xyz="0.0 0.0 0.0"  rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://holiday_robot_descriptions/assets/object/visual/lakibeam1.obj" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material asset="plastic_shiny_black"/> -->
+      </visual>
+      <collision>
+        <!-- <origin xyz="0.0 0.0 0.0"  rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://holiday_robot_descriptions/assets/object/visual/lakibeam1.obj" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <surface asset="silicon"/> -->
+      </collision>
+  </link>
+  <joint name="rear_lidar" type="fixed">
+    <parent link="BASE" />
+    <child link="rear_lidar" />
+    <origin xyz="-0.01 0.278 0.13" rpy="0 0 1.5892" />
+  </joint>
+
+  <!-- left base camera -->
+  <link name="left_base_camera">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="left_base_camera" type="fixed">
+    <parent link="BASE"/>
+    <child link="left_base_camera"/>
+    <origin xyz="0.162 -0.29 0.0225" rpy="-0.165 0 3.4116" />
+  </joint>
+
+  <link name="left_base_camera_rgb">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="left_base_camera_rgb" type="fixed">
+    <parent link="left_base_camera" />
+    <child link="left_base_camera_rgb" />
+    <origin xyz="0 0 0" rpy="-1.57079632679  0 0" />
+  </joint>
+
+  <!-- right base camera -->
+  <link name="right_base_camera">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="right_base_camera" type="fixed">
+    <parent link="BASE"/>
+    <child link="right_base_camera"/>
+    <origin xyz="-0.162 -0.30 0.0225" rpy="-0.165 0 2.8716" />
+  </joint>
+
+  <link name="right_base_camera_rgb">
+    <inertial>
+      <mass value="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.001"/>
+      </geometry>
+      <material>
+        <color rgba="1 0 0 0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="right_base_camera_rgb" type="fixed">
+    <parent link="right_base_camera" />
+    <child link="right_base_camera_rgb" />
+    <origin xyz="0 0 0" rpy="-1.57079632679  0 0" />
+  </joint>
+</robot>
