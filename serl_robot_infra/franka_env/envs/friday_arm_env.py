@@ -14,7 +14,7 @@ Subclass of the base FridayEnv (franka_env.py) with three deviations:
     robot server; here the learner runs standalone).
 
 Talks to robot_servers/friday_server.py, whose per-arm routes live under
-SERVER_URL = http://host:5000/<left|right>/ — the base class's `url + route`
+SERVER_URL = http://host:5010/<left|right>/ — the base class's `url + route`
 calls compose the arm prefix for free.
 
 Obs keys and shapes are kept identical to the base env (tcp_vel / force /

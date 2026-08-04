@@ -14,7 +14,7 @@ Quest app (headset, "Remy2", controller mode)
    ▼
 QuestReader ─▶ QuestIntervention ─▶ FridayArmEnv x2 ─▶ DualFridayEnv ─▶ RL stack
  (teleop/actor process, conda env `hilserl`, NO ROS imports)
-   │ HTTP :5000  (/left/... , /right/...)
+   │ HTTP :5010 (/left/... , /right/...)
    ▼
 friday_server.py  (ROS: rclpy + Flask, ONE self-contained script)
    │ publish  PoseStamped  /hday/friday/impedance_target_{left,right}   (canon)
@@ -29,7 +29,7 @@ J^T Cartesian impedance controller (real driver — or the twin, §6)
 | Process | Where (real robot) | Env |
 |---|---|---|
 | `friday_server.py` | ops PC (jazzy on host) — run STRAIGHT from this repo, no container, no copy. Or the onboard Jetson (§4.6) | distro python + `pip install flask absl-py scipy` |
-| `teleop_test.py` / actor / learner | ops PC or any host reaching :5000; teleop/data-collection also runs all-on-Jetson (§4.6) | conda `hilserl` (py3.10, jax) |
+| `teleop_test.py` / actor / learner | ops PC or any host reaching :5010; teleop/data-collection also runs all-on-Jetson (§4.6) | conda `hilserl` (py3.10, jax) — on the Jetson: repo-local `.venv`, `./scripts/setup_venv.sh` (§4.6) |
 | Quest app | headset, USB to the teleop machine | — |
 | impedance controller | robot side (already deployed) | — |
 
@@ -73,7 +73,7 @@ knobs appear ONCE (top of file / `_ArmConfig`) and apply to both arms.
    tracking is proven.
 3. **⚠ `ACTION_SCALE`** — decide the policy-sane value now (it is the RL
    action space; teleop does not need it large).
-4. Stereo restored in `LeftArmConfig` + `curl :5000/getimage` shows
+4. Stereo restored in `LeftArmConfig` + `curl :5010/getimage` shows
    side-by-side eyes (env splits at width/2).
 5. Quest base-yaw probe at the operator spot: push controller toward the
    robot → coupling error must point robot-forward. Wrong axis →
@@ -99,7 +99,7 @@ FK chain: `BASE -> waist_1..5 -> {side}_arm_1..7 -> {side}_arm_ee`
 match what the impedance controller anchors and interprets commands in).
 Joint matching is by name; no EE-pose topic is needed on the robot.
 
-Gate: `curl -s -X POST http://127.0.0.1:5000/left/getstate` returns a pose
+Gate: `curl -s -X POST http://127.0.0.1:5010/left/getstate` returns a pose
 (503 = joint_state not arriving; the server also warns if chain joints are
 missing from the msg).
 
@@ -110,7 +110,7 @@ python3 - <<'EOF'
 import requests, numpy as np
 from scipy.spatial.transform import Rotation
 for side in ("left", "right"):
-    p = requests.post(f"http://127.0.0.1:5000/{side}/getstate").json()["pose"]
+    p = requests.post(f"http://127.0.0.1:5010/{side}/getstate").json()["pose"]
     e = Rotation.from_quat(p[3:]).as_euler("xyz")
     print(f"{side}: RESET_POSE = np.array([{p[0]:.3f}, {p[1]:.3f}, {p[2]:.3f}, {e[0]:.3f}, {e[1]:.3f}, {e[2]:.3f}])")
 EOF
@@ -148,6 +148,14 @@ Restore `MAX_EPISODE_LENGTH ≈ 120` for RL. `classifier_ckpt/` must exist in
 the experiment dir for BOTH actor and learner. Buffer sanity check:
 TESTING.md §2.3 (interventions land in RL + demo buffers).
 
+⚠ **`record_success_fail.py` is not headless-ready.** It imports pynput at
+module level and toggles the success label with the **spacebar** — over ssh
+with no X, the import itself fails. §2 reserves the Quest **A** button as the
+label channel (`info["right"]`) for exactly this, but nothing is wired to it
+yet. Wire A → `success_key` before running the classifier-data step on the
+Jetson (`teleop_test.py` / `record_demos.py` are unaffected — neither imports
+pynput).
+
 Restart rules: config/wrapper/env edits → restart teleop/actor only (+
 reconnect app). Server edit → restart server.
 
@@ -163,18 +171,76 @@ One non-obvious requirement: `config.py` IMPORTS jax/flax/serl_launcher at
 module level even though teleop never computes with them — plain CPU jax
 (aarch64 wheel) satisfies the import.
 
-```bash
-# once, on the Jetson (py3.10 venv/conda)
-pip install -e serl_launcher -e serl_robot_infra
-pip install jax pynput               # CPU jax — import-only for teleop
-pip install flask absl-py scipy      # server side
-sudo apt install adb
+Install (validated on the friday Jetson, 2026-08-04: Ubuntu 24.04 aarch64, no
+ROS on the host, no conda, python3.12 only). This Jetson is shared — the
+install writes **nothing** outside the repo: no apt, no sudo, no `~/.local`,
+no `~/.cache`. `.venv/` (855 MB) and `.tools/` (176 MB, holds uv + a private
+CPython 3.10 + caches + the server's pip target) are gitignored; deleting
+those two dirs is a complete uninstall.
 
-# run (all via ssh):
+```bash
+./scripts/setup_venv.sh              # once — uv + .venv + deps + smoke test
+source .venv/bin/activate
+```
+
+Do NOT set `PYNPUT_BACKEND=dummy`. Headless, `from pynput import keyboard`
+raises ImportError, the guard in `friday_arm_env.py` catches it and prints
+"ESC listener disabled" — the designed path. The dummy backend defeats that:
+import and `listener.start()` both succeed and the `NotImplementedError`
+surfaces in the listener's own thread, where the guard cannot see it, so you
+get one spurious traceback per arm. Harmless, but noise. `teleop_test.py` and
+`record_demos.py` never touch pynput; only `record_success_fail.py` imports it
+at module level (§4.5 caveat).
+
+Deps are pinned in the script, NOT taken from the two `setup.py` files
+(they are installed `--no-deps`): upstream's `install_requires` pulls
+pymodbus / hidapi / rospkg / tensorflow plus the bogus PyPI `typing` and `zmq`
+shim packages, none of which the friday stack needs. `pyrealsense2` and
+`easyhid` ARE installed — unused by friday, but `wrappers.py`/`franka_env.py`
+import them at module level. jax resolves to the CPU aarch64 wheel (0.6.2),
+which is all teleop needs.
+
+**ROS lives in a container, not on the Jetson.** There is no `/opt/ros` here,
+so `friday_server.py` (the only rclpy process) borrows the jazzy image already
+on the box. The wrapper runs a throwaway `--rm` container as your uid with the
+repo bind-mounted, so nothing persists and the long-running `holiday-iekf`
+container is left alone. DDS settings are mirrored from it (`ROS_DOMAIN_ID=138`,
+cyclonedds, thort profile) — without them the robot's topics are invisible.
+
+**Host vs container split.** Container = ROS only (`friday_server.py`, `ros2`
+CLI). Host = everything else: `.venv`, teleop, `adb`, the Quest. `adb` is
+already installed on the Jetson host — never `apt install` inside the
+container (it is unprivileged and `--rm`, so it would fail and then vanish).
+Never `source .venv/bin/activate` inside the container either: the venv is on
+the mount, so it is visible, but it puts python3.10 ahead of the image's
+python3.12 and rclpy stops importing.
+
+Container names: the server runs as `friday-server-$USER` (image
+`cr.hday.io/rtabmap/rtabmap-jazzy:v0.1`). `holiday-iekf` is somebody else's
+long-running container and is never touched. For ROS CLI work (`ros2 topic
+list/echo/hz`) use a second, independent container — do NOT exec into the
+server one, a crashed shell there takes the server with it:
+
+```bash
+./scripts/friday_server_docker.sh --shell                 # interactive, cwd=/repo
+./scripts/friday_server_docker.sh --shell ros2 topic list # one-shot
+docker logs -f friday-server-$USER                        # server output
+```
+
+**Port note: the stack is on 5010, not 5000.** Port 5000 is held by the zot
+registry container (`*:5000`) on this Jetson, so 5010 is now the committed
+default in all three places — `friday_server.py --flask_port`, and
+`SERVER_URL` for both arms in `config.py`. Nothing needs a flag; override with
+`--flask_port=` + matching `SERVER_URL` if you ever move it.
+
+```bash
 # shell 1 — server (robot topics are local to the Jetson: ideal placement)
-python3 serl_robot_infra/robot_servers/friday_server.py
+./scripts/friday_server_docker.sh
+# gate: curl -s -X POST http://127.0.0.1:5010/left/getstate  -> real pose
+#       (verified 2026-08-04 against the live robot, FK mode, both arms)
 
 # shell 2 — Quest USB plugged into the JETSON
+source .venv/bin/activate
 adb reverse tcp:8000 tcp:8000        # first time: accept the headset's
                                      # "Allow USB debugging" prompt; udev rule
                                      # (vendor 2833) if adb says no permissions
@@ -182,13 +248,14 @@ cd examples/experiments/friday_reach && python teleop_test.py
 # headset: Remy2 app, TCP wired, localhost:8000, controller mode
 ```
 
-`SERVER_URL` stays 127.0.0.1 (server and env on the same Jetson).
+`SERVER_URL` stays 127.0.0.1 (server and env on the same Jetson) — only the
+port changes.
 
 What does NOT belong on the Jetson: the learner (needs the GPU workstation)
 and the actor with a real policy (jax-CUDA has no official aarch64 wheels;
 CPU inference of the ResNet encoder is marginal at 10 Hz). For RL, split:
 Jetson runs `friday_server` only; workstation runs actor+learner with
-`SERVER_URL = "http://<jetson-ip>:5000/<side>/"` in config.py and the Quest
+`SERVER_URL = "http://<jetson-ip>:5010/<side>/"` in config.py and the Quest
 USB moved to the workstation.
 
 ## 5. Hard-won lessons (mostly learned on the twin, apply everywhere)

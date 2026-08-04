@@ -56,7 +56,7 @@ class _ArmConfig(FridayArmConfig):
 
 
 class LeftArmConfig(_ArmConfig):
-    SERVER_URL = "http://127.0.0.1:5000/left/"
+    SERVER_URL = "http://127.0.0.1:5010/left/"
     # Head stereo lives on the LEFT env only. Twin (alone_v1) has no stereo ->
     # empty. Real robot: {"stereo_left": {}, "stereo_right": {}} (required for
     # classifier/demo/RL, which need images).
@@ -69,7 +69,7 @@ class LeftArmConfig(_ArmConfig):
 
 
 class RightArmConfig(_ArmConfig):
-    SERVER_URL = "http://127.0.0.1:5000/right/"
+    SERVER_URL = "http://127.0.0.1:5010/right/"
     REALSENSE_CAMERAS = {}
     RESET_POSE = np.array([-0.411, -0.389, 1.279, 0.981, 0.186, -0.215])
     ABS_POSE_LIMIT_LOW = RESET_POSE - POSE_LIMIT_DELTA

@@ -3,8 +3,8 @@
 Mirrors the franka_server.py pattern (one Flask app, one shared rclpy node
 spun in a daemon thread) but serves BOTH arms from one process, with per-arm
 routes under /left/... and /right/... — the gym env's SERVER_URL is then
-    http://127.0.0.1:5000/left/     (LeftArmConfig)
-    http://127.0.0.1:5000/right/    (RightArmConfig)
+    http://127.0.0.1:5010/left/     (LeftArmConfig)
+    http://127.0.0.1:5010/right/    (RightArmConfig)
 and the stock `url + "pose"` etc. calls compose correctly.
 
 ROS interface (all names are flags — the state topics are placeholders until
@@ -49,7 +49,7 @@ from sensor_msgs.msg import CompressedImage, JointState
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("flask_url", "127.0.0.1", "Flask host")
-flags.DEFINE_integer("flask_port", 5000, "Flask port")
+flags.DEFINE_integer("flask_port", 5010, "Flask port")  # 5000 is the zot registry on the friday Jetson
 # Canonical names from message_names.h (kImpedanceTarget*Topic) — consumed by
 # both the real driver and the digital twin, so no remap needed on either.
 flags.DEFINE_string("cmd_topic_left", "/hday/friday/impedance_target_left",

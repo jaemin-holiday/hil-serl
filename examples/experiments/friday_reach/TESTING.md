@@ -27,13 +27,13 @@ ros2 topic list | grep -E "impedance_target|joint_state|stereo_head"
 # /hday/friday/impedance_target_* (message_names.h).
 python serl_robot_infra/robot_servers/friday_server.py
 
-Expect: two startup lines printing cmd/state topics, Flask on :5000.
+Expect: two startup lines printing cmd/state topics, Flask on :5010.
 
 ### 1.2 State route (per arm)
 
 ```bash
-curl -s -X POST http://127.0.0.1:5000/left/getstate | python3 -m json.tool
-curl -s -X POST http://127.0.0.1:5000/right/getstate | python3 -m json.tool
+curl -s -X POST http://127.0.0.1:5010/left/getstate | python3 -m json.tool
+curl -s -X POST http://127.0.0.1:5010/right/getstate | python3 -m json.tool
 ```
 
 Expect: JSON with `pose` = 7 floats matching
@@ -51,7 +51,7 @@ missing [...]" warning if the msg lacks chain joints.
 ### 1.3 Stereo route + split
 
 ```bash
-curl -s http://127.0.0.1:5000/getimage -o /tmp/stereo.jpg && xdg-open /tmp/stereo.jpg
+curl -s http://127.0.0.1:5010/getimage -o /tmp/stereo.jpg && xdg-open /tmp/stereo.jpg
 ```
 
 Expect: one JPEG, both eyes side by side. The env splits at width/2 into
@@ -84,9 +84,9 @@ build the env with no robot/network (fake_env path).
 ros2 topic echo /hday/friday/impedance_target_left
 
 # read current pose, add +2 cm z, post it:
-curl -s -X POST http://127.0.0.1:5000/left/getstate | python3 -c "
+curl -s -X POST http://127.0.0.1:5010/left/getstate | python3 -c "
 import json,sys; p=json.load(sys.stdin)['pose']; p[2]+=0.02; print(json.dumps({'arr':p}))
-" | curl -s -X POST -H 'Content-Type: application/json' -d @- http://127.0.0.1:5000/left/pose
+" | curl -s -X POST -H 'Content-Type: application/json' -d @- http://127.0.0.1:5010/left/pose
 ```
 
 Expect: one PoseStamped on the topic; with the impedance controller enabled,
@@ -222,7 +222,7 @@ ros2 topic hz /hday/friday/left_ee_pose        # expect ~50 Hz
 # the holiday mount at src/digital-twin/scripts/friday_server.py — re-copy
 # from hil-serl/serl_robot_infra/robot_servers/ after edits). flask/absl-py
 # must be pip-installed in the container once. net=host, so the conda shell
-# reaches :5000 at localhost.
+# reaches :5010 at localhost.
 docker exec -it <twin-container-name> bash
 source /opt/ros/jazzy/setup.bash
 python3 /workspaces/holiday/src/digital-twin/scripts/friday_server.py

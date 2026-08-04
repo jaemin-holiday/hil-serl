@@ -14,7 +14,7 @@ target owned by the robot side.
 | Quest streaming app (headset) | — | connects TO the actor machine, TCP :8000 |
 
 The gym env never imports rclpy — the Flask server owns all ROS. Per-arm
-routes: `http://127.0.0.1:5000/left/...` and `.../right/...`.
+routes: `http://127.0.0.1:5010/left/...` and `.../right/...`.
 
 ## Topics (flags on friday_server.py)
 
