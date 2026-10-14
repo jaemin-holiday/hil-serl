@@ -1,0 +1,32 @@
+# Rainbow RB-Y1 + RobotEra XHand1 VR wrist/base profile (holiday PR #2342).
+#
+# PLACEHOLDER, NOT MEASURED (2026-10-06). The robot is not assembled yet (the
+# PR says the bracket may change). Every value is FM26B's (fm26b.yaml), kept
+# only so the rby1_xhand teleop runs end-to-end on the ZMQ path:
+#
+#   base.yaw_deg          FM26B's +90 (operator-forward = URDF +x). RB-Y1's
+#                         base also drives along +x, so it is the right guess.
+#   wrist_offset_yup      publish-frame height constant, not kinematic.
+#   ee.*                  legacy grip-frame recipe + FM26A's measured wrist
+#                         corrections. RB-Y1's wrist (link_*_arm_6, flange
+#                         along -Z) is a different arm — expect these to be
+#                         wrong until the arms-forward probe is re-run.
+#
+# Consumers (hil-serl ZmqQuestReader, holiday-lab br_anchored) command the
+# robot RELATIVE to its pose at clutch time, so an uncalibrated absolute offset
+# here costs nothing; only the ORIENTATION correction shows up as a constant
+# wrist twist. Probe, then replace these values.
+robot: rby1_xhand
+
+base:
+  yaw_deg: 90
+  wrist_offset_yup: [0, 1.335, 0]
+  head_offset_yup: [0, 1.335, 0]
+
+ee:
+  right:
+    t_target_euler: {seq: "yx", deg: [180, -45]}
+    orientation_euler: {seq: "xyz", deg: [144.6, -4.2, 12.0]}
+  left:
+    t_target_euler: {seq: "yx", deg: [0, -45]}
+    orientation_euler: {seq: "xyz", deg: [41.6, 4.8, 15.4]}

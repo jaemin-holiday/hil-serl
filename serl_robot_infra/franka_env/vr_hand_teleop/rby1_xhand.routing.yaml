@@ -1,0 +1,49 @@
+# rby1_xhand routing config — LinkReaching (wrists) + ViewReaching (head) for
+# the holiday controller on RB-Y1 + XHand1 (holiday src/drivers/rby1-driver).
+#
+# Frames are the RobotSpec body names (specs/robot/rby1_xhand/rby1_xhand.robot.yaml):
+# root body `base`; wrist targets go on `link_*_arm_6` = the controller's
+# body_reaching slot names (common.controller.yaml) — a target_frame that
+# matches no slot is silently dropped. (*_hand_link is 0.1363 m further along
+# the flange -Z; the bridge's wrist pose is the hand, so expect a constant offset
+# until configs/robots/rby1_xhand.yaml carries it.) Head camera body `link_head_2`. Arms only drive the
+# wrists; the torso is left to the controller's state attraction. Fingers go
+# out as JointReaching from the rby1_xhand hand profile (12 vendor-named joints
+# per side, matching the spec) — nothing to configure here.
+#
+# Passed by run_vr_teleop.py as --config (ZMQ: `tasks` section; ROS 2: the wire).
+# NOT verified live: no RB-Y1 session yet; the wrist orientation corrections in
+# configs/robots/rby1_xhand.yaml are still FM26B's.
+
+view_reaching:
+  viewing_frame: link_head_2
+  reference_frame: base
+  active_joints:
+    - head_0
+    - head_1
+
+link_reaching:
+  right:
+    source: wrist_right
+    target_frame: link_right_arm_6
+    reference_frame: base
+    active_joints:
+      - right_arm_0
+      - right_arm_1
+      - right_arm_2
+      - right_arm_3
+      - right_arm_4
+      - right_arm_5
+      - right_arm_6
+  left:
+    source: wrist_left
+    target_frame: link_left_arm_6
+    reference_frame: base
+    active_joints:
+      - left_arm_0
+      - left_arm_1
+      - left_arm_2
+      - left_arm_3
+      - left_arm_4
+      - left_arm_5
+      - left_arm_6

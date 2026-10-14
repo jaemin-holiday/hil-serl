@@ -14,31 +14,29 @@ host only — every ROS jazzy piece runs in a container).
 
 | Repo | Path | Branch | What it carries |
 |---|---|---|---|
-| holiday (monorepo) | `~/workspace/holiday-rby1` (worktree) | `feat/rby1-driver` (+ local commits) | RB-Y1 driver, holiday controller (fabrics) for `rby1_xhand`, SIL (`sil.sh`), specs, URDF |
-| remy2 | `~/workspace/remy2` | `feat/rby1-xhand` | vr_teleop `--robot rby1_xhand` (XHand IK profile, wrist/routing configs), rby1-sdk follower |
-| holiday-lab | `~/workspace/holiday-lab` | `feat/rby1-xhand` | Newton sim VR teleop (`sil teleop`) for rby1_xhand, anchored wrist mode |
-| hil-serl | `~/workspace/hil-serl` | `bimanual_friday` | `rby1_server.py`, `rby1_reach` experiment, this runbook |
-| rby1-sdk | `~/workspace/rby1-sdk` | — | vendor Python SDK (pip `rby1-sdk` 0.10.0), only the follower uses it |
+| hil-serl | `~/workspace/hil-serl` | `bimanual_friday` | everything rby1-specific on our side: `rby1_server.py`, `rby1_reach`, the XHand hand profile + vr_teleop launcher (`franka_env/vr_hand_teleop/`), this runbook |
+| holiday (monorepo) | `~/workspace/holiday-rby1` (worktree) | `feat/rby1-driver` + `feat/rby1-driver-sil-hands` | RB-Y1 driver, holiday controller (fabrics) for `rby1_xhand`, SIL (`sil.sh`), specs, URDF. Our one commit: loopback hands + rviz for SIL |
+| remy2 | `~/workspace/remy2` | `main`, **read-only**, pinned (f260792f) | vr_teleop + retargeting, used as a library/process by `vr_hand_teleop/run_vr_teleop.sh`; no rby1 code in it |
+
+Not needed: holiday-lab (Newton sim). A `feat/rby1-xhand` branch there has a
+working `sil teleop` for rby1_xhand (URDF robot, anchored wrist mode); kept
+as a visual/physics sandbox for the hands, not part of this pipeline.
 
 ## 2. System map
 
-Two independent stacks. Both start from the same Quest app and the same
-`vr_teleop --robot rby1_xhand`.
-
 ```
-A. VR → Newton sim (visual hands, physics, no ROS)
-   Quest (hand mode) ─TCP:8000─▶ vr_teleop (IK: 12 XHand joints/side) ─ZMQ:5555─▶ holiday-lab `sil teleop` (fabrics) ─▶ Newton
+Robot side (SIL = vendor simulator; the robot later, same wire):
+   rby1_server.py ─ROS2 holiday/manipulation─▶ controller_cpp_node (fabrics) ─SHM─▶ rby1-driver ─gRPC─▶ RB-Y1 | rby1-sim
+                  ◀─ROS2 holiday/joint_states─ (+ URDF FK = EE pose)                        └─RS485─▶ XHand | loopback (SIL)
 
-B. HIL-SERL → holiday controller (the real-robot stack; SIL = vendor simulator)
-   hil-serl env ─HTTP:5010─▶ rby1_server.py ─ROS2 holiday/manipulation─▶ controller_cpp_node (fabrics) ─SHM─▶ rby1-driver ─gRPC─▶ RB-Y1 | rby1-sim
-                                            ◀─ROS2 holiday/joint_states─ (+ URDF FK = EE pose)         └─RS485─▶ XHand | loopback
-   Quest (controller mode) ─TCP:8000─▶ hil-serl QuestReader (grip = intervene, X = episode end)
+Operator side, two input modes (one at a time; both bind :8000):
+   controller mode: Quest ─TCP─▶ hil-serl QuestReader ─▶ QuestIntervention (grip = intervene, X = episode end) ─▶ env ─HTTP:5010─▶ rby1_server
+   hand mode:       Quest ─TCP─▶ vr_teleop (remy2 venv, run_vr_teleop.sh: wrist + 12 XHand joints/side) ─ZMQ:5555─▶ hil-serl [ZmqQuestReader, TODO] ─▶ env ─HTTP─▶ rby1_server (/pose, /hand)
 ```
 
-The Manipulation message is the same one vr_teleop's ROS 2 publisher and the
-inference stack emit on every holiday robot: `LinkReaching` per wrist,
-`JointReaching` per finger. Stack B therefore moves to the real robot with no
-code change (section 6).
+`Manipulation` = `LinkReaching` per wrist + `JointReaching` per finger, the
+message vr_teleop's ROS 2 publisher and the inference stack emit on every
+holiday robot. Nothing changes between SIL and the robot (section 6).
 
 ## 3. Controls
 
@@ -75,28 +73,26 @@ desktop (`DISPLAY=:1`), not over ssh.
 
 ## 5. Every session
 
-### 5.1 Stack A — VR teleop in the Newton sim
+### 5.1 Hand-tracking bridge (fingers): remy2 vr_teleop via our launcher
 
 ```bash
-# shell 1: sim (GL window)
-cd ~/workspace/holiday-lab
-uv run --no-sync sil teleop --scenario rby1_xhand_robot_only \
-    --config apps/sil/teleop/configs/rby1_xhand.yaml --streamer-backend none
-
-# shell 2: VR bridge (PC is the TCP server — start it before the app streams)
 adb reverse tcp:8000 tcp:8000
-cd ~/workspace/remy2/vr_teleop
-uv run --no-sync python main.py --robot rby1_xhand           # hands mode, ZMQ :5555
+cd ~/workspace/hil-serl
+serl_robot_infra/franka_env/vr_hand_teleop/run_vr_teleop.sh         # ZMQ :5555
 # headset: Remy2 app → TCP (wired), localhost, 8000, hand mode → start streaming
-# bridge: with hands visible and arms forward, type wr then wl
+# bridge terminal: hands visible, arms forward → wr, then wl
 ```
 
-Teleop config has `br_anchored: true`: on `wr`/`wl` the robot's current
-wrist pose and the operator's wrist are latched and the robot follows the
-displacement. Locking again drops the anchor. Position box ±0.5 m
-(`br_anchor_pos_limit`).
+The launcher runs remy2's own `main.py` in remy2's venv after injecting the
+XHand hand profile and pointing `--robot` at `rby1_xhand.robot.yaml`,
+`--ik-config` at `xhand_right.yaml`, `--config` at `rby1_xhand.routing.yaml`
+(all in `vr_hand_teleop/`). Output per side: `arm` {position, rotation wxyz}
+in base frame (absent while locked) and `hand.joint_angles` = the 12 XHand
+joints by URDF name. `--publisher ros2` sends the same as `holiday/manipulation`
+(needs friday_msgs in the environment, i.e. a container). Consuming this in the
+hil-serl env (`ZmqQuestReader`) is the open item in section 10.
 
-### 5.2 Stack B — HIL-SERL against the controller, SIL
+### 5.2 HIL-SERL against the controller, SIL
 
 ```bash
 # 1. stack: vendor sim (2 windows) + driver (loopback XHands) + controller
@@ -123,6 +119,9 @@ Gate before anything else (same five as the Friday bring-up): zero-policy
 hold-still → grip = that arm tracks → release = freeze → re-grip elsewhere =
 no jump → headset off mid-grip freezes.
 
+Fingers from the env: `POST /<side>/hand {"q": [12]}` (XHand SDK order),
+echoed back as `getstate.hand_q`.
+
 Hands in SIL: `RBY1_SIL_XHAND=1` makes the driver's XHand slots a loopback
 (real slew loop, state = command), so `getstate.hand_q` and the RViz hands
 follow `POST /<side>/hand {"q": [12]}`. The vendor simulator itself draws the
@@ -145,9 +144,8 @@ on aarch64 (vendor `.so`), which is why SIL uses the loopback.
 | `--position_weight/--orientation_weight` | `rby1_server.py` | 5 / 1 | LinkReaching weights |
 | `body_reaching.*` | holiday `specs/robot/rby1_xhand/common.controller.yaml` | kp 20, kd 9.2 | wrist BR gains in the real controller |
 | `stream.max_step` | driver params (`ros2 param set /rby1_driver stream.max_step`) | 0.3 rad | driver rejects a command further than this from the measured pose |
-| `br_anchored`, `br_anchor_pos_limit` | holiday-lab `apps/sil/teleop/configs/rby1_xhand.yaml` | true, 0.5 m | Stack A delta mode |
-| `ee.*.orientation_euler` | remy2 `vr_teleop/configs/robots/rby1_xhand.yaml` | FM26B's (placeholder) | wrist orientation correction; shows as a constant twist until the arms-forward probe is redone |
-| `human_hand_scale`, `weights.*` | remy2 `retargeting/configs/ik/xhand_right.yaml` | 1.0, prod defaults | XHand IK tuning |
+| `ee.*.orientation_euler` | `vr_hand_teleop/rby1_xhand.robot.yaml` | FM26B's (placeholder) | wrist orientation correction; shows as a constant twist until the arms-forward probe is redone |
+| `human_hand_scale`, `weights.*` | `vr_hand_teleop/xhand_right.yaml` | 1.0, prod defaults | XHand IK tuning |
 
 ## 8. Hard-won lessons
 
@@ -164,9 +162,10 @@ on aarch64 (vendor `.so`), which is why SIL uses the loopback.
   `xhand_right.yaml` has no `wrist_calibration`. A hand profile must declare
   only the 12 real joints; the 5×4 template helper would put 8 phantom joints
   on the wire.
-- **holiday-lab spec robots need glibc ≥ 2.38** (`hday` extension); this host
-  has 2.35, so `rby1_xhand` is loaded from `assets/robots/rby1_xhand/robot.urdf`
-  (base_env falls back to `robot.urdf` when `robot.usd` is absent).
+- **remy2 stays untouched**: hand profiles and `--robot` are closed registries
+  in remy2, so `run_vr_teleop.py` injects the profile and replaces
+  `resolve_robot_profile` at runtime instead of forking. Pin remy2; the
+  launcher checks the three seams it uses and exits if they move.
 - **Null-space drift under fabrics**: with the wrist pose held, arm joints keep
   moving for seconds toward the state-attraction targets. Expected; check on
   the robot whether the controller spec needs stronger attraction.
@@ -181,9 +180,15 @@ on aarch64 (vendor `.so`), which is why SIL uses the loopback.
 | `serl_robot_infra/franka_env/descriptions/rby1_xhand.urdf` | kinematics-only URDF for FK |
 | `scripts/rby1_server_docker.sh`, `scripts/Dockerfile.rby1_server` | server container (driver image + flask/scipy/absl) |
 | `examples/experiments/rby1_reach/` | experiment config (reset poses, limits), teleop_test |
-| remy2 `retargeting/retargeting/profiles/xhand.py`, `configs/ik/xhand_right.yaml`, `assets/xhand_right/` | XHand hand profile + IK |
-| remy2 `vr_teleop/configs/robots/rby1_xhand.yaml`, `configs/rby1_xhand.yaml` | wrist/base profile (placeholder), ROS 2 routing |
-| remy2 `vr_teleop/tools/rby1_xhand_follower.py` | ZMQ → rby1-sdk direct path (no holiday controller); unverified XHand vendor API |
-| holiday-lab `assets/robots/rby1_xhand/`, `assets/scenarios/rby1_xhand_robot_only/`, `apps/sil/teleop/configs/rby1_xhand.yaml` | Newton sim robot + teleop config |
-| holiday-lab `policies/structured/teleop.py` (`br_anchored`), `envs/base_env.py` (URDF fallback) | Stack A changes |
+| `serl_robot_infra/franka_env/vr_hand_teleop/` | XHand hand profile (`xhand_profile.py`), IK config + URDF, wrist/base profile (placeholder), routing yaml, `run_vr_teleop.{py,sh}` launcher over remy2 |
 | holiday `src/drivers/rby1-driver/sil.sh`, `rby1_driver/src/xhand_driver.cpp`, `docker/rviz/` | SIL: loopback hands, rviz view |
+
+## 10. Open items
+
+1. `ZmqQuestReader` + intervention wrapper for hand mode: consume the vr_teleop
+   wire (wrist pose already in base frame; `arm` absent = that side released,
+   which is the deadman; episode end from the keyboard), forward the 12 finger
+   targets to `/<side>/hand`. Decide later whether fingers enter the action
+   space (12D → 36D) or stay operator-driven.
+2. Camera on the rby1_xhand stack → `/getimage`, `image_keys`.
+3. Arms-forward probe on the robot → `rby1_xhand.robot.yaml` orientation values.
