@@ -91,14 +91,24 @@ class Rby1Arm:
         self.q = [0.0] * 7
         self.dq = [0.0] * 7
         self.hand_q = [0.0] * 12
+        self.hand_target = None   # last /hand target; re-sent with every /pose
 
     def _msg(self):
         m = Manipulation()
         m.header.stamp = self.node.get_clock().now().to_msg()
         return m
 
+    def _hand_reaching(self, q):
+        return [JointReaching(target_joint=f"{self.side}_hand_{name}", target_position=float(v))
+                for name, v in zip(HAND_JOINTS, q)]
+
     def move(self, pose):
-        """Absolute EE pose target [x, y, z, qx, qy, qz, qw] in reference_frame."""
+        """Absolute EE pose target [x, y, z, qx, qy, qz, qw] in reference_frame.
+
+        The latest finger target rides along in the same message: the
+        controller takes the newest Manipulation per tick, so a finger-only
+        message sent just before a pose message could be skipped. One message
+        per side per step carries both."""
         assert len(pose) == 7
         lr = LinkReaching()
         lr.target_frame = EE_LINK[self.side]
@@ -110,6 +120,8 @@ class Rby1Arm:
         lr.target_quat = Quaternion(x=float(pose[3]), y=float(pose[4]), z=float(pose[5]), w=float(pose[6]))
         m = self._msg()
         m.link_reaching.append(lr)
+        if self.hand_target is not None:
+            m.joint_reaching.extend(self._hand_reaching(self.hand_target))
         self.pub.publish(m)
 
     def joint_reset(self):
@@ -121,9 +133,9 @@ class Rby1Arm:
     def move_hand(self, q12):
         """12 finger targets (rad, SDK order), clipped to the URDF limits."""
         q = np.clip(np.asarray(q12, dtype=float), HAND_LO, HAND_HI)
+        self.hand_target = q
         m = self._msg()
-        for name, v in zip(HAND_JOINTS, q):
-            m.joint_reaching.append(JointReaching(target_joint=f"{self.side}_hand_{name}", target_position=float(v)))
+        m.joint_reaching.extend(self._hand_reaching(q))
         self.pub.publish(m)
 
     def update(self, q_by_name, dq_by_name):
