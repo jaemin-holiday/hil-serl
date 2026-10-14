@@ -35,6 +35,12 @@ TELEOP_EXAGGERATE_POS = 2.0
 TELEOP_EXAGGERATE_ROT = 1.0
 
 
+# Operator input: "controller" = Quest controllers straight into QuestReader
+# (grip = intervene, X = episode end); "hand" = Quest hand tracking through
+# remy2 vr_teleop (run_vr_teleop.sh) -> ZMQ, with XHand finger targets.
+INPUT_MODE = os.environ.get("RBY1_INPUT", "controller")
+VR_TELEOP_ZMQ = os.environ.get("VR_TELEOP_ZMQ", "tcp://127.0.0.1:5555")
+
 # Workspace box half-width around each arm's RESET_POSE (xyz m, euler rad).
 POSE_LIMIT_DELTA = np.array([0.3, 0.3, 0.3, 0.8, 0.8, 0.8])
 
@@ -99,11 +105,26 @@ class TrainConfig(DefaultTrainingConfig):
         )
         env = DualFridayEnv(left_env, right_env, display_images=False)
         if not fake_env:
-            env = QuestIntervention(
-                env,
-                pos_exaggerate=TELEOP_EXAGGERATE_POS,
-                rot_exaggerate=TELEOP_EXAGGERATE_ROT,
-            )
+            if INPUT_MODE == "hand":
+                # Quest hand tracking via remy2 vr_teleop (franka_env/vr_hand_teleop):
+                # wrist lock in the bridge = deadman, keyboard x = episode end,
+                # fingers forwarded to the server outside the action.
+                from franka_env.zmq_quest_reader import ZmqQuestReader
+                from franka_env.envs.xhand_passthrough import XHandPassthrough
+                reader = ZmqQuestReader(VR_TELEOP_ZMQ)
+                reader.start()
+                env = QuestIntervention(
+                    env, reader=reader,
+                    pos_exaggerate=TELEOP_EXAGGERATE_POS,
+                    rot_exaggerate=TELEOP_EXAGGERATE_ROT,
+                )
+                env = XHandPassthrough(env, reader)
+            else:
+                env = QuestIntervention(
+                    env,
+                    pos_exaggerate=TELEOP_EXAGGERATE_POS,
+                    rot_exaggerate=TELEOP_EXAGGERATE_ROT,
+                )
         env = DualRelativeFrame(env)
         env = DualQuat2EulerWrapper(env)
         env = SERLObsWrapper(env, proprio_keys=self.proprio_keys)

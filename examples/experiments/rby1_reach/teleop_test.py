@@ -9,6 +9,7 @@ Run AFTER friday_server.py is up and the state topics are publishing:
     python teleop_test.py
 """
 
+import os
 import pathlib
 import sys
 
@@ -21,14 +22,16 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from experiments.rby1_reach.config import TrainConfig  # noqa: E402
 
 
-from experiments.rby1_reach.config import LeftArmConfig, RightArmConfig
+from experiments.rby1_reach.config import INPUT_MODE, LeftArmConfig, RightArmConfig
 
 
 def main():
     print("reset() will DRIVE BOTH ARMS to RESET_POSE:")
     print(f"  left : {LeftArmConfig.RESET_POSE}")
     print(f"  right: {RightArmConfig.RESET_POSE}")
-    input("Verify these are measured (not placeholders), e-stop in reach, then press Enter...")
+    if os.environ.get("RBY1_TELEOP_YES") != "1":
+        input("Verify these are measured (not placeholders), e-stop in reach, then press Enter...")
+    print(f"input mode: {INPUT_MODE}" + ("  (hand: unlock with wr/wl in the vr_teleop terminal; x = episode end)" if INPUT_MODE == "hand" else "  (controller: GRIP = intervene, X = episode end)"))
     env = TrainConfig().get_environment(fake_env=False, classifier=False)
     obs, _ = env.reset()
     print("teleop_test: hold GRIP to drive an arm; ESC = episode end; Ctrl+C = quit")
@@ -41,7 +44,9 @@ def main():
             step += 1
             if step % 10 == 0:  # ~1 Hz at hz=10
                 mark = "INTERVENING" if "intervene_action" in info else "policy(zero)"
-                print(f"step {step:5d}  {mark}  A={info.get('right')} X={info.get('left')}")
+                fingers = info.get("fingers", {})
+                fmark = " fingers=" + ",".join(sorted(fingers)) if fingers else ""
+                print(f"step {step:5d}  {mark}  A={info.get('right')} X={info.get('left')}{fmark}")
             # Episodes end ONLY when the operator presses X (left controller)
             # — QuestIntervention raises `truncated` on the rising edge. The
             # length limit is parked at 100000 so nothing ends on its own.
