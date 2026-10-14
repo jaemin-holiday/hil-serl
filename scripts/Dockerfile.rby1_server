@@ -1,0 +1,10 @@
+# rby1_server.py runtime: the holiday rby1-driver image (ROS jazzy + friday_msgs,
+# built by holiday/src/drivers/rby1-driver/sil.sh or its compose) plus the three
+# python packages the server needs. Build: scripts/rby1_server_docker.sh does it
+# when the image is missing.
+ARG BASE_IMAGE=rby1-driver:jazzy
+FROM ${BASE_IMAGE}
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3-flask python3-scipy python3-absl \
+    && rm -rf /var/lib/apt/lists/*
