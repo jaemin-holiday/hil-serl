@@ -36,8 +36,14 @@ scripts/rby1_server_docker.sh                       # :5010
 scripts/rby1_server_docker.sh --shell ros2 topic hz /holiday/joint_states
 
 # env smoke / teleop (conda hilserl)
-cd examples/experiments/rby1_reach && python teleop_test.py      # Quest controller mode, as friday_reach
+cd examples/experiments/rby1_reach && python teleop_test.py                 # Quest controller mode, as friday_reach
+RBY1_INPUT=hand python teleop_test.py                                        # Quest hand mode via vr_teleop (fingers too)
 ```
+
+Hand mode needs the bridge: `serl_robot_infra/franka_env/vr_hand_teleop/run_vr_teleop.sh`
+(remy2 vr_teleop with the XHand profile), `wr`/`wl` there to free the wrists
+(= the deadman), keyboard `x` = episode end. Fingers go to `/<side>/hand`
+outside the action. Full procedure and the automatic check: `docs/rby1_runbook.md` §0.
 
 Verified 2026-10-14 in SIL: getstate at `ready` = `RESET_POSE` (FK from URDF),
 a +5 cm z LinkReaching reaches in ~1 s with orientation held, `env.reset()` +
@@ -54,8 +60,8 @@ Server-side weights: `--position_weight 5 --orientation_weight 1`.
 ## Not done
 
 - No camera: `image_keys` / classifier need a camera topic + `/getimage`.
-- Fingers: channel is wired (`/<side>/hand`, verified in SIL that the targets
-  reach the driver's `/hday_ctrl_cmd` slots) but the env does not send them
-  (fixed-gripper setup) and SIL has no hand hardware, so `hand_q` stays 0 there.
+- Fingers: operator-driven in hand mode (`XHandPassthrough` → `/<side>/hand`,
+  recorded in `info["fingers"]`), not part of the action space. SIL shows them
+  through the driver's loopback hands (`RBY1_SIL_XHAND=1`) and `sil.sh rviz`.
 - Real robot: same server, `just rt run rby1_xhand` + torque/control on instead
   of `sil.sh`; ROS domain 138 either way.
