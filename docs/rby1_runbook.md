@@ -19,7 +19,8 @@ after each step is in brackets.
 # T1  robot stack (vendor sim + driver with loopback XHands + fabrics controller)
 cd ~/workspace/holiday-rby1/src/drivers/rby1-driver
 RBY1_SIL_XHAND=1 ./sil.sh up            [two windows: Simulation, RBY1 Display; "xhand: simulated hand ... hand=L/R"]
-./sil.sh enable && ./sil.sh ready       [success=True; "sent ready (22 joints)"; arms come up to READY]
+./sil.sh enable && ./sil.sh torque on   [success=True twice; hands' torque on — without it finger commands are ignored]
+./sil.sh ready                          ["sent ready (22 joints)"; arms come up to READY]
 ./sil.sh rviz                           [third window: the URDF with both XHands; stays up]
 
 # T2  hil-serl robot server
@@ -56,7 +57,7 @@ Teardown: Ctrl+C in T4, T3, T2; `./sil.sh down` in T1.
 | Repo | Path | Branch | What it carries |
 |---|---|---|---|
 | hil-serl | `~/workspace/hil-serl` | `bimanual_friday` | everything rby1-specific on our side: `rby1_server.py`, `rby1_reach`, the XHand hand profile + vr_teleop launcher (`franka_env/vr_hand_teleop/`), this runbook |
-| holiday (monorepo) | `~/workspace/holiday-rby1` (worktree) | `feat/rby1-driver` + `feat/rby1-driver-sil-hands` | RB-Y1 driver, holiday controller (fabrics) for `rby1_xhand`, SIL (`sil.sh`), specs, URDF. Our one commit: loopback hands + rviz for SIL |
+| holiday (monorepo) | `~/workspace/holiday-rby1` (worktree) | `feat/rby1-driver` (colleague's PR branch; our commit on top: loopback hands + `sil.sh torque/rviz`) | RB-Y1 driver, holiday controller (fabrics) for `rby1_xhand`, SIL (`sil.sh`), specs, URDF |
 | remy2 | `~/workspace/remy2` | `main`, **read-only**, pinned (f260792f) | vr_teleop + retargeting, used as a library/process by `vr_hand_teleop/run_vr_teleop.sh`; no rby1 code in it |
 
 Not needed: holiday-lab (Newton sim). A `feat/rby1-xhand` branch there has a
@@ -158,6 +159,7 @@ episode and resets. Left/right opposite phase as commanded.
 cd ~/workspace/holiday-rby1/src/drivers/rby1-driver
 RBY1_SIL_XHAND=1 ./sil.sh up
 ./sil.sh enable                       # rollout on
+./sil.sh torque on                    # hands' torque (service, as on the robot); body servo is on from init
 ./sil.sh ready                        # spec named state, ~5 s
 ./sil.sh rviz                         # optional: the only view that shows the XHands
 
@@ -182,9 +184,11 @@ Fingers from the env: `POST /<side>/hand {"q": [12]}` (XHand SDK order),
 echoed back as `getstate.hand_q`.
 
 Hands in SIL: `RBY1_SIL_XHAND=1` makes the driver's XHand slots a loopback
-(real slew loop, state = command), so `getstate.hand_q` and the RViz hands
-follow `POST /<side>/hand {"q": [12]}`. The vendor simulator itself draws the
-stock grippers and never the XHands.
+(the real slew loop, state = command), so `getstate.hand_q` and the RViz hands
+follow `POST /<side>/hand {"q": [12]}`. Torque comes from the service
+(`sil.sh torque on`), never from a command — with torque off the driver logs
+`xhand: command ignored: torque is off` and holds. The vendor simulator itself
+draws the stock grippers and never the XHands.
 
 ## 6. Real robot (not yet done)
 
